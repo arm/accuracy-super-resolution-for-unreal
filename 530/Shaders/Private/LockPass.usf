@@ -1,0 +1,7 @@
+//
+// Copyright © 2024 Arm Limited.
+// SPDX-License-Identifier: MIT
+//
+#include "/Engine/Public/Platform.ush"
+
+#include "/ThirdParty/ArmASR/ffxm_fsr2_lock_pass.hlsl"
