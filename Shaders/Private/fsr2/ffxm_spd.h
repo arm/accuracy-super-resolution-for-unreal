@@ -119,7 +119,7 @@ FfxFloat32x4 SpdReduce4(FfxFloat32x4 v0, FfxFloat32x4 v1, FfxFloat32x4 v2, FfxFl
 #endif // #if FFXM_SPD_PACKED_ONLY
 
 //_____________________________________________________________/\_______________________________________________________________
-#if defined(FFXM_GLSL) && !FFXM_SPD_WAVE_OPERATIONS
+#if defined(FFXM_GLSL) && FFXM_SPD_WAVE_OPERATIONS
 #extension GL_KHR_shader_subgroup_quad:require
 #endif
 
@@ -144,7 +144,7 @@ bool SpdExitWorkgroup(FfxUInt32 numWorkGroups, FfxUInt32 localInvocationIndex, F
 // User defined: FfxFloat32x4 SpdReduce4(FfxFloat32x4 v0, FfxFloat32x4 v1, FfxFloat32x4 v2, FfxFloat32x4 v3);
 FfxFloat32x4 SpdReduceQuad(FfxFloat32x4 v)
 {
-#if defined(FFXM_GLSL) && !FFXM_SPD_WAVE_OPERATIONS
+#if defined(FFXM_GLSL) && FFXM_SPD_WAVE_OPERATIONS
 
     FfxFloat32x4 v0 = v;
     FfxFloat32x4 v1 = subgroupQuadSwapHorizontal(v);
@@ -152,7 +152,7 @@ FfxFloat32x4 SpdReduceQuad(FfxFloat32x4 v)
     FfxFloat32x4 v3 = subgroupQuadSwapDiagonal(v);
     return SpdReduce4(v0, v1, v2, v3);
 
-#elif defined(FFXM_HLSL) && !FFXM_SPD_WAVE_OPERATIONS
+#elif defined(FFXM_HLSL) && FFXM_SPD_WAVE_OPERATIONS
 
     // requires SM6.0
     FfxFloat32x4 v0 = v;
@@ -584,13 +584,13 @@ void SpdDownsample(FfxUInt32x2 workGroupID, FfxUInt32 localInvocationIndex, FfxU
 
 FfxFloat16x4 SpdReduceQuadH(FfxFloat16x4 v)
 {
-#if defined(FFXM_GLSL) && !FFXM_SPD_WAVE_OPERATIONS
+#if defined(FFXM_GLSL) && FFXM_SPD_WAVE_OPERATIONS
     FfxFloat16x4 v0 = v;
     FfxFloat16x4 v1 = subgroupQuadSwapHorizontal(v);
     FfxFloat16x4 v2 = subgroupQuadSwapVertical(v);
     FfxFloat16x4 v3 = subgroupQuadSwapDiagonal(v);
     return SpdReduce4H(v0, v1, v2, v3);
-#elif defined(FFXM_HLSL) && !FFXM_SPD_WAVE_OPERATIONS
+#elif defined(FFXM_HLSL) && FFXM_SPD_WAVE_OPERATIONS
     // requires SM6.0
     FfxFloat16x4 v0 = v;
     FfxFloat16x4 v1 = QuadReadAcrossX(v);
