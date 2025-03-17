@@ -11,11 +11,6 @@
 #include "ShaderParameterStruct.h"
 #include "SystemTextures.h"
 
-#define FFXM_HALF 0
-#define FFXM_CPU
-#include "ffxm_core.h"
-#include "ffxm_fsr1.h"
-
 class FArmASRRCASPS : public FGlobalShader
 {
 public:
@@ -56,9 +51,15 @@ inline void SetRCASParameters(
 	const FIntRect& OutputRect,
 	FRDGBuilder& GraphBuilder)
 {
-	FfxUInt32x4 RcasConfig = { 0, 0, 0, 0 };
-	const float SharpenessRemapped = (-2.0f * Sharpness) + 2.0f;
-	FsrRcasCon(RcasConfig, SharpenessRemapped);
+	FUintVector4 RcasConfig = { 0, 0, 0, 0 };
+	float SharpenessRemapped = (-2.0f * Sharpness) + 2.0f;
+
+	// Transform from stops to linear value.
+	SharpenessRemapped = exp2(-SharpenessRemapped);
+	memcpy(&RcasConfig[0], &SharpenessRemapped, sizeof(float));
+	RcasConfig[1] = FFloat16(SharpenessRemapped).Encoded + (FFloat16(SharpenessRemapped).Encoded << 16);
+	RcasConfig[2] = 0;
+	RcasConfig[3] = 0;
 
 	RCASConstantParameters->rcasConfig = FUintVector4(RcasConfig[0], RcasConfig[1], RcasConfig[2], RcasConfig[3]);
 	RCASParameters->cbArmASR = ArmASRPassParameters;
