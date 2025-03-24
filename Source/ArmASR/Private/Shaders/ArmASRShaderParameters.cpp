@@ -22,27 +22,36 @@ void FArmASRGlobalShader::ModifyCompilationEnvironment(const FGlobalShaderPermut
 	OutEnvironment.SetDefine(TEXT("FFXM_HLSL"), 1);
 	OutEnvironment.CompilerFlags.Add(CFLAG_AllowTypedUAVLoads);
 
-	if (IsOpenGLPlatform(Parameters.Platform))
+	bool bIsOpenGL = IsOpenGLPlatform(Parameters.Platform);
+	bool bIsVulkan = IsVulkanPlatform(Parameters.Platform);
+	bool bIsDx11   = RHIGetInterfaceType() == ERHIInterfaceType::D3D11;
+	bool bIsDx12   = RHIGetInterfaceType() == ERHIInterfaceType::D3D12;
+	bool bIsHlslcc = FGenericDataDrivenShaderPlatformInfo::GetIsHlslcc(Parameters.Platform);
+	bool bUsingDxc = FDataDrivenShaderPlatformInfo::GetSupportsDxc(Parameters.Platform);
+	bool bUsingSM6 = IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM6);
+
+	if (bIsOpenGL)
 	{
 		OutEnvironment.SetDefine(TEXT("FFXM_SHADER_PLATFORM_GLES_3_2"), 1);
 	}
 
-	bool bUsingDxc = FDataDrivenShaderPlatformInfo::GetSupportsDxc(Parameters.Platform);
-	OutEnvironment.SetDefine(TEXT("FFXM_HALF"), bUsingDxc); // FXC does not support any 16-bit types
+	// Disable FP16 for OpenGL with HLSLCC or for DX11, as it is not supported.
+	bool bDisableFp16 = (bIsOpenGL && bIsHlslcc) || bIsDx11;
+	OutEnvironment.SetDefine(TEXT("FFXM_HALF"), bDisableFp16 ? 0 : 1);
 
 	if (!bUsingDxc)
 	{
-		// Rmove the unorm attribute when compiling to avoid an fxc error.
+		// Remove the unorm attribute when compiling to avoid an fxc error.
 		OutEnvironment.SetDefine(TEXT("unorm"), TEXT(" "));
 	}
 
-	bool bUsingSM6 = IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM6);
-	OutEnvironment.SetDefine(TEXT("FFXM_HLSL_6_2"), bUsingSM6);
-	if (bUsingSM6)
+	// If OpenGL without HLSLCC, DX12 or Vulkan enable CFLAG_AllowRealTypes to use explicit 16-bit types.
+	if (bIsVulkan || bIsDx12 || (bIsOpenGL && !bIsHlslcc))
 	{
-		OutEnvironment.CompilerFlags.Add(CFLAG_AllowRealTypes); // Required in order to use explicit 16-bit types, and
-																// is only supported on D3D SM 6.2+
+		OutEnvironment.CompilerFlags.Add(CFLAG_AllowRealTypes);
 	}
+
+	OutEnvironment.SetDefine(TEXT("FFXM_HLSL_6_2"), bUsingSM6);
 
 	OutEnvironment.SetDefine(TEXT("FFXM_FSR2_OPTION_HDR_COLOR_INPUT"), 1);
 	OutEnvironment.SetDefine(TEXT("FFXM_FSR2_OPTION_LOW_RESOLUTION_MOTION_VECTORS"), 1);
