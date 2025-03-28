@@ -1,5 +1,5 @@
 // Copyright  © 2023 Advanced Micro Devices, Inc.
-// Copyright © 2024 Arm Limited.
+// Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,17 +28,6 @@
 #define FSR2_BIND_UAV_RECONSTRUCTED_PREV_NEAREST_DEPTH      4
 
 #define FSR2_BIND_CB_FSR2                                   0
-
-// Global mandatory defines
-#if !defined(FFXM_HALF)
-#define FFXM_HALF 1
-#endif
-#if !defined(FFXM_GPU)
-#define FFXM_GPU 1
-#endif
-#if !defined(FFXM_HLSL)
-#define FFXM_HLSL 1
-#endif
 
 #include "ffxm_fsr2_callbacks_hlsl.h"
 #include "ffxm_fsr2_common.h"
