@@ -891,23 +891,6 @@ FfxFloat32 AutoExposure()
 }
 #endif
 
-FfxFloat32 SampleLanczos2Weight(FfxFloat32 x)
-{
-#if defined(FSR2_BIND_SRV_LANCZOS_LUT)
-    return r_lanczos_lut.SampleLevel(s_LinearClamp, FfxFloat32x2(x / 2, 0.5f), 0);
-#else
-    return 0.f;
-#endif
-}
-
-#if defined(FSR2_BIND_SRV_UPSCALE_MAXIMUM_BIAS_LUT)
-FfxFloat32 SampleUpsampleMaximumBias(FfxFloat32x2 uv)
-{
-    // Stored as a SNORM, so make sure to multiply by 2 to retrieve the actual expected range.
-    return FfxFloat32(2.0) * r_upsample_maximum_bias_lut.SampleLevel(s_LinearClamp, abs(uv) * 2.0, 0);
-}
-#endif
-
 #if defined(FSR2_BIND_SRV_TEMPORAL_REACTIVE)
 FfxFloat32 SampleTemporalReactive(FfxFloat32x2 fUV)
 {

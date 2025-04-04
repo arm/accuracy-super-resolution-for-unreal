@@ -1,5 +1,5 @@
 // Copyright  © 2023 Advanced Micro Devices, Inc.
-// Copyright © 2024 Arm Limited.
+// Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -225,37 +225,6 @@ FFXM_MIN16_F Lanczos2Approx(FFXM_MIN16_F x)
 }
 #endif //FFXM_HALF
 
-FfxFloat32 Lanczos2_UseLUT(FfxFloat32 x)
-{
-    return SampleLanczos2Weight(abs(x));
-}
-
-#if FFXM_HALF
-FFXM_MIN16_F Lanczos2_UseLUT(FFXM_MIN16_F x)
-{
-    return FFXM_MIN16_F(SampleLanczos2Weight(abs(x)));
-}
-#endif //FFXM_HALF
-
-FfxFloat32x4 Lanczos2_UseLUT(FfxFloat32x4 fColor0, FfxFloat32x4 fColor1, FfxFloat32x4 fColor2, FfxFloat32x4 fColor3, FfxFloat32 t)
-{
-    FfxFloat32 fWeight0 = Lanczos2_UseLUT(-1.f - t);
-    FfxFloat32 fWeight1 = Lanczos2_UseLUT(-0.f - t);
-    FfxFloat32 fWeight2 = Lanczos2_UseLUT(+1.f - t);
-    FfxFloat32 fWeight3 = Lanczos2_UseLUT(+2.f - t);
-    return (fWeight0 * fColor0 + fWeight1 * fColor1 + fWeight2 * fColor2 + fWeight3 * fColor3) / (fWeight0 + fWeight1 + fWeight2 + fWeight3);
-}
-#if FFXM_HALF
-FFXM_MIN16_F4 Lanczos2_UseLUT(FFXM_MIN16_F4 fColor0, FFXM_MIN16_F4 fColor1, FFXM_MIN16_F4 fColor2, FFXM_MIN16_F4 fColor3, FFXM_MIN16_F t)
-{
-    FFXM_MIN16_F fWeight0 = Lanczos2_UseLUT(FFXM_MIN16_F(-1.f) - t);
-    FFXM_MIN16_F fWeight1 = Lanczos2_UseLUT(FFXM_MIN16_F(-0.f) - t);
-    FFXM_MIN16_F fWeight2 = Lanczos2_UseLUT(FFXM_MIN16_F(+1.f) - t);
-    FFXM_MIN16_F fWeight3 = Lanczos2_UseLUT(FFXM_MIN16_F(+2.f) - t);
-    return (fWeight0 * fColor0 + fWeight1 * fColor1 + fWeight2 * fColor2 + fWeight3 * fColor3) / (fWeight0 + fWeight1 + fWeight2 + fWeight3);
-}
-#endif
-
 FfxFloat32x4 Lanczos2(FfxFloat32x4 fColor0, FfxFloat32x4 fColor1, FfxFloat32x4 fColor2, FfxFloat32x4 fColor3, FfxFloat32 t)
 {
     FfxFloat32 fWeight0 = Lanczos2(-1.f - t);
@@ -394,80 +363,6 @@ FFXM_MIN16_F4 Lanczos2Approx(Fetched9TapSamplesMin16 Samples, FFXM_MIN16_F2 fPxF
 }
 
 #endif //FFXM_HALF
-
-
-FfxFloat32x4 Lanczos2LUT(FetchedBicubicSamples Samples, FfxFloat32x2 fPxFrac)
-{
-    FfxFloat32x4 fColorX0 = Lanczos2_UseLUT(Samples.fColor00, Samples.fColor10, Samples.fColor20, Samples.fColor30, fPxFrac.x);
-    FfxFloat32x4 fColorX1 = Lanczos2_UseLUT(Samples.fColor01, Samples.fColor11, Samples.fColor21, Samples.fColor31, fPxFrac.x);
-    FfxFloat32x4 fColorX2 = Lanczos2_UseLUT(Samples.fColor02, Samples.fColor12, Samples.fColor22, Samples.fColor32, fPxFrac.x);
-    FfxFloat32x4 fColorX3 = Lanczos2_UseLUT(Samples.fColor03, Samples.fColor13, Samples.fColor23, Samples.fColor33, fPxFrac.x);
-    FfxFloat32x4 fColorXY = Lanczos2_UseLUT(fColorX0, fColorX1, fColorX2, fColorX3, fPxFrac.y);
-
-#if !FFXM_SHADER_QUALITY_OPT_DISABLE_DERINGING
-    // Deringing
-
-    // TODO: only use 4 by checking jitter
-    const FfxInt32 iDeringingSampleCount = 4;
-    const FfxFloat32x4 fDeringingSamples[4] = {
-        Samples.fColor11,
-        Samples.fColor21,
-        Samples.fColor12,
-        Samples.fColor22,
-    };
-
-    FfxFloat32x4 fDeringingMin = fDeringingSamples[0];
-    FfxFloat32x4 fDeringingMax = fDeringingSamples[0];
-
-    FFXM_UNROLL
-    for (FfxInt32 iSampleIndex = 1; iSampleIndex < iDeringingSampleCount; ++iSampleIndex) {
-
-        fDeringingMin = ffxMin(fDeringingMin, fDeringingSamples[iSampleIndex]);
-        fDeringingMax = ffxMax(fDeringingMax, fDeringingSamples[iSampleIndex]);
-    }
-
-    fColorXY = clamp(fColorXY, fDeringingMin, fDeringingMax);
-#endif
-    return fColorXY;
-}
-
-#if FFXM_HALF
-FFXM_MIN16_F4 Lanczos2LUT(FetchedBicubicSamplesMin16 Samples, FFXM_MIN16_F2 fPxFrac)
-{
-    FFXM_MIN16_F4 fColorX0 = Lanczos2_UseLUT(Samples.fColor00, Samples.fColor10, Samples.fColor20, Samples.fColor30, fPxFrac.x);
-    FFXM_MIN16_F4 fColorX1 = Lanczos2_UseLUT(Samples.fColor01, Samples.fColor11, Samples.fColor21, Samples.fColor31, fPxFrac.x);
-    FFXM_MIN16_F4 fColorX2 = Lanczos2_UseLUT(Samples.fColor02, Samples.fColor12, Samples.fColor22, Samples.fColor32, fPxFrac.x);
-    FFXM_MIN16_F4 fColorX3 = Lanczos2_UseLUT(Samples.fColor03, Samples.fColor13, Samples.fColor23, Samples.fColor33, fPxFrac.x);
-    FFXM_MIN16_F4 fColorXY = Lanczos2_UseLUT(fColorX0, fColorX1, fColorX2, fColorX3, fPxFrac.y);
-
-#if !FFXM_SHADER_QUALITY_OPT_DISABLE_DERINGING
-    // Deringing
-
-    // TODO: only use 4 by checking jitter
-    const FfxInt32 iDeringingSampleCount = 4;
-    const FFXM_MIN16_F4 fDeringingSamples[4] = {
-        Samples.fColor11,
-        Samples.fColor21,
-        Samples.fColor12,
-        Samples.fColor22,
-    };
-
-    FFXM_MIN16_F4 fDeringingMin = fDeringingSamples[0];
-    FFXM_MIN16_F4 fDeringingMax = fDeringingSamples[0];
-
-    FFXM_UNROLL
-    for (FfxInt32 iSampleIndex = 1; iSampleIndex < iDeringingSampleCount; ++iSampleIndex)
-    {
-        fDeringingMin = ffxMin(fDeringingMin, fDeringingSamples[iSampleIndex]);
-        fDeringingMax = ffxMax(fDeringingMax, fDeringingSamples[iSampleIndex]);
-    }
-
-    fColorXY = clamp(fColorXY, fDeringingMin, fDeringingMax);
-#endif
-    return fColorXY;
-}
-#endif //FFXM_HALF
-
 
 
 FfxFloat32x4 Lanczos2Approx(FfxFloat32x4 fColor0, FfxFloat32x4 fColor1, FfxFloat32x4 fColor2, FfxFloat32x4 fColor3, FfxFloat32 t)
