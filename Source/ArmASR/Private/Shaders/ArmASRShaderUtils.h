@@ -91,62 +91,15 @@ struct TextureBulkData final : public FResourceBulkDataInterface
 /*
  * Common Shader Parameter Functions
  */
-inline FVector4f SetupDeviceDepthToViewSpaceDepthParams(const FViewInfo& View, const FIntPoint RenderSize)
+inline FVector4f SetupDeviceDepthToViewSpaceDepthParams(const FViewInfo& View)
 {
 	checkf(static_cast<int32>(ERHIZBuffer::IsInverted) != 0, TEXT("ZBuffer should be inverted."));
-
-	const bool bInverted = true; // UE5 uses reversed z depth buffer.
-	const bool bInfinite = true; // UE5 uses infinite far plane.
-
-	float CameraNear = FLT_MAX;
-	float CameraFar = View.ViewMatrices.ComputeNearPlane();
-	float CameraFovAngleVertical = View.ViewMatrices.ComputeHalfFieldOfViewPerAxis().Y * 2.0f;
-
-	// Swap min and max as reversed Z depth buffer is used.
-	float Min = std::max(CameraNear, CameraFar);
-	float Max = std::min(CameraNear, CameraFar);
-
-	// a 0 0 0   x
-	// 0 b 0 0   y
-	// 0 0 c d   z
-	// 0 0 e 0   1
-	const float Q = Max / (Min - Max);
-	const float MatrixElemC[2][2] =
-	{
-		{
-			Q,                   // Non reversed, non infinite
-			-1.0f - FLT_EPSILON  // Non reversed, infinite
-		},
-		{
-			Q,                   // Reversed, non infinite
-			0.0f + FLT_EPSILON   // Reversed, infinite
-		}
-	};
-
-	const float MatrixElemE[2][2] =
-	{
-		{
-			Q * Min,             // Non reversed, non infinite
-			-Min - FLT_EPSILON   // Non reversed, infinite
-		},
-		{
-			Q * Min,             // Reversed, non infinite
-			Max                  // Reversed, infinite
-		}
-	};
-
-	FVector4f DeviceToViewDepth;
-	DeviceToViewDepth[0] = -1.0f * MatrixElemC[bInverted][bInfinite];
-	DeviceToViewDepth[1] = MatrixElemE[bInverted][bInfinite];
-
-	// Revert x and y coords
-	const float Aspect = RenderSize.X / static_cast<float>(RenderSize.Y);
-	const float CotHalfFovY = std::cosf(0.5f * CameraFovAngleVertical) / std::sinf(0.5f * CameraFovAngleVertical);
-
-	DeviceToViewDepth[2] = 1.0f / (CotHalfFovY / Aspect);
-	DeviceToViewDepth[3] = 1.0f / CotHalfFovY;
-
-	return DeviceToViewDepth;
+	return FVector4f(
+		-FLT_EPSILON,
+		View.NearClippingDistance,
+		View.ViewMatrices.GetInvProjectionMatrix().M[0][0],
+		View.ViewMatrices.GetInvProjectionMatrix().M[1][1]
+	);
 }
 
 inline int32_t GetJitterPhaseCount(int32_t RenderWidth, int32_t DisplayWidth)
@@ -182,7 +135,7 @@ inline void SetCommonParameters(
 	ArmASRPassParameters->iFrameIndex = FrameIndex;
 
 	// fDeviceToViewDepth
-	ArmASRPassParameters->fDeviceToViewDepth = SetupDeviceDepthToViewSpaceDepthParams(ViewInfo, ArmASRPassParameters->iRenderSize);
+	ArmASRPassParameters->fDeviceToViewDepth = SetupDeviceDepthToViewSpaceDepthParams(ViewInfo);
 
 	// fJitter
 	ArmASRPassParameters->fJitter = FVector2f(ViewInfo.TemporalJitterPixels.X, ViewInfo.TemporalJitterPixels.Y);
