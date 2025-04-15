@@ -24,10 +24,10 @@ void FArmASRGlobalShader::ModifyCompilationEnvironment(const FGlobalShaderPermut
 
 	bool bIsOpenGL = IsOpenGLPlatform(Parameters.Platform);
 	bool bIsVulkan = IsVulkanPlatform(Parameters.Platform);
-	bool bIsDx11   = RHIGetInterfaceType() == ERHIInterfaceType::D3D11;
-	bool bIsDx12   = RHIGetInterfaceType() == ERHIInterfaceType::D3D12;
-	bool bIsHlslcc = FGenericDataDrivenShaderPlatformInfo::GetIsHlslcc(Parameters.Platform);
 	bool bUsingDxc = FDataDrivenShaderPlatformInfo::GetSupportsDxc(Parameters.Platform);
+	bool bIsD3DFXC = Parameters.Platform == EShaderPlatform::SP_PCD3D_SM5 && !bUsingDxc;
+	bool bIsD3DDXC = (Parameters.Platform == EShaderPlatform::SP_PCD3D_SM5 || Parameters.Platform == EShaderPlatform::SP_PCD3D_SM6) && bUsingDxc;
+	bool bIsHlslcc = FGenericDataDrivenShaderPlatformInfo::GetIsHlslcc(Parameters.Platform);
 	bool bUsingSM6 = IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM6);
 
 	if (bIsOpenGL)
@@ -36,7 +36,7 @@ void FArmASRGlobalShader::ModifyCompilationEnvironment(const FGlobalShaderPermut
 	}
 
 	// Disable FP16 for OpenGL with HLSLCC or for DX11, as it is not supported.
-	bool bDisableFp16 = (bIsOpenGL && bIsHlslcc) || bIsDx11;
+	bool bDisableFp16 = (bIsOpenGL && bIsHlslcc) || bIsD3DFXC;
 	OutEnvironment.SetDefine(TEXT("FFXM_HALF"), bDisableFp16 ? 0 : 1);
 
 	if (!bUsingDxc)
@@ -46,7 +46,7 @@ void FArmASRGlobalShader::ModifyCompilationEnvironment(const FGlobalShaderPermut
 	}
 
 	// If OpenGL without HLSLCC, DX12 or Vulkan enable CFLAG_AllowRealTypes to use explicit 16-bit types.
-	if (bIsVulkan || bIsDx12 || (bIsOpenGL && !bIsHlslcc))
+	if (bIsVulkan || bIsD3DDXC || (bIsOpenGL && !bIsHlslcc))
 	{
 		OutEnvironment.CompilerFlags.Add(CFLAG_AllowRealTypes);
 	}
