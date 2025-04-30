@@ -23,7 +23,8 @@ enum class EShaderQualityPreset : int32
 {
 	QUALITY = 1 UMETA(DisplayName = "Quality"),
 	BALANCED = 2 UMETA(DisplayName = "Balanced"),
-	PERFORMANCE = 3 UMETA(DisplayName = "Performance")
+	PERFORMANCE = 3 UMETA(DisplayName = "Performance"),
+	ULTRA_PERFORMANCE = 4 UMETA(DisplayName = "Ultra Performance")
 };
 
 class FArmASRModule : public IModuleInterface

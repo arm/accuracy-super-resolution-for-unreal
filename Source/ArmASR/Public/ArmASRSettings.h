@@ -56,8 +56,8 @@ public:
 	UPROPERTY(EditAnywhere, Config, Category = QualitySettings, meta = (
 		ConsoleVariable = "r.ArmASR.ShaderQuality",
 		DisplayName = "Quality Mode",
-		ClampMin = 1, ClampMax = 3,
-		ToolTip = "Select shader quality preset. 1: Quality / 2: Balanced / 3: Performance.",
+		ClampMin = 1, ClampMax = 4,
+		ToolTip = "Select shader quality preset. 1: Quality / 2: Balanced / 3: Performance / 4:Ultra Performance.",
 		EditCondition = "EnableArmASR"))
 	EShaderQualityPreset ArmASRShaderQualityMode;
 

@@ -11,6 +11,8 @@
 class FArmASRReconstructPrevDepthPS : public FGlobalShader
 {
 public:
+	using FPermutationDomain = TShaderPermutationDomain<FArmASR_ApplyUltraPerfOpt>;
+
 	DECLARE_GLOBAL_SHADER(FArmASRReconstructPrevDepthPS);
 	SHADER_USE_PARAMETER_STRUCT(FArmASRReconstructPrevDepthPS, FGlobalShader);
 
@@ -39,6 +41,7 @@ public:
 
 // Function to setup Reconstruct Previous Depth Shader parameters. RpdShaderParameters will be updated.
 inline void SetReconstructPrevDepthParameters(
+	bool bIsUltraPerformance,
 	FArmASRReconstructPrevDepthPS::FParameters* RpdShaderParameters,
 	TUniformBufferRef<FArmASRPassParameters> ArmASRPassParameters,
 	const FRDGTextureRef MotionVectorTexture,
@@ -66,25 +69,36 @@ inline void SetReconstructPrevDepthParameters(
 	// Clear the reconstructed previous nearest depth texture as the shader doesn't always write to all elements
 	AddClearRenderTargetPass(GraphBuilder, NearestDepthTexture);
 
-	// Create textures for all RenderTargets
-	FRDGTextureDesc DilatedDepthDesc = FRDGTextureDesc::Create2D(InputExtents, PF_R32_FLOAT, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_RenderTargetable, 1, 1);
-	FRDGTextureRef DilatedDepthTexture = GraphBuilder.CreateTexture(DilatedDepthDesc, TEXT("DilatedDepthTexture"));
+	if (bIsUltraPerformance)
+	{
+		FRDGTextureDesc DilatedDepthVelocityLumaDesc = FRDGTextureDesc::Create2D(InputExtents, PF_FloatRGBA, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_RenderTargetable, 1, 1);
+		FRDGTextureRef DilatedDepthVelocityLumaTexture = GraphBuilder.CreateTexture(DilatedDepthVelocityLumaDesc, TEXT("DilatedDepthVelocityLumaTexture"));
 
-	FRDGTextureDesc DilatedVelocityDesc = FRDGTextureDesc::Create2D(InputExtents, PF_G16R16F, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_RenderTargetable, 1, 1);
-	FRDGTextureRef DilatedVelocityTexture = GraphBuilder.CreateTexture(DilatedVelocityDesc, TEXT("DilatedVelocityTexture"));
+		const FScreenPassRenderTarget DilatedDepthVelocityLumaRT(DilatedDepthVelocityLumaTexture, Viewport.Rect, ERenderTargetLoadAction::ENoAction);
+		RpdShaderParameters->RenderTargets[0] = DilatedDepthVelocityLumaRT.GetRenderTargetBinding();
+	}
+	else
+	{
+		// Create textures for all RenderTargets
+		FRDGTextureDesc DilatedDepthDesc = FRDGTextureDesc::Create2D(InputExtents, PF_R32_FLOAT, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_RenderTargetable, 1, 1);
+		FRDGTextureRef DilatedDepthTexture = GraphBuilder.CreateTexture(DilatedDepthDesc, TEXT("DilatedDepthTexture"));
 
-	FRDGTextureDesc LockLumaDesc = FRDGTextureDesc::Create2D(InputExtents, PF_R16F, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_RenderTargetable, 1, 1);
-	FRDGTextureRef LockLumaTexture = GraphBuilder.CreateTexture(LockLumaDesc, TEXT("LockLumaTexture"));
+		FRDGTextureDesc DilatedVelocityDesc = FRDGTextureDesc::Create2D(InputExtents, PF_G16R16F, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_RenderTargetable, 1, 1);
+		FRDGTextureRef DilatedVelocityTexture = GraphBuilder.CreateTexture(DilatedVelocityDesc, TEXT("DilatedVelocityTexture"));
 
-	// Create RenderTargets and assign to parameters.
-	const FScreenPassRenderTarget DilatedDepthRT(DilatedDepthTexture, Viewport.Rect, ERenderTargetLoadAction::ENoAction);
-	RpdShaderParameters->RenderTargets[0] = DilatedDepthRT.GetRenderTargetBinding();
+		FRDGTextureDesc LockLumaDesc = FRDGTextureDesc::Create2D(InputExtents, PF_R16F, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_RenderTargetable, 1, 1);
+		FRDGTextureRef LockLumaTexture = GraphBuilder.CreateTexture(LockLumaDesc, TEXT("LockLumaTexture"));
+	
+		// Create RenderTargets and assign to parameters.
+		const FScreenPassRenderTarget DilatedDepthRT(DilatedDepthTexture, Viewport.Rect, ERenderTargetLoadAction::ENoAction);
+		RpdShaderParameters->RenderTargets[0] = DilatedDepthRT.GetRenderTargetBinding();
 
-	const FScreenPassRenderTarget DilatedVelocityRT(DilatedVelocityTexture, Viewport.Rect, ERenderTargetLoadAction::ENoAction);
-	RpdShaderParameters->RenderTargets[1] = DilatedVelocityRT.GetRenderTargetBinding();
+		const FScreenPassRenderTarget DilatedVelocityRT(DilatedVelocityTexture, Viewport.Rect, ERenderTargetLoadAction::ENoAction);
+		RpdShaderParameters->RenderTargets[1] = DilatedVelocityRT.GetRenderTargetBinding();
 
-	const FScreenPassRenderTarget LockLumaRT(LockLumaTexture, Viewport.Rect, ERenderTargetLoadAction::ENoAction);
-	RpdShaderParameters->RenderTargets[2] = LockLumaRT.GetRenderTargetBinding();
+		const FScreenPassRenderTarget LockLumaRT(LockLumaTexture, Viewport.Rect, ERenderTargetLoadAction::ENoAction);
+		RpdShaderParameters->RenderTargets[2] = LockLumaRT.GetRenderTargetBinding();
+	}
 
 	// Assign common parameters to constant buffer.
 	RpdShaderParameters->cbArmASR = ArmASRPassParameters;

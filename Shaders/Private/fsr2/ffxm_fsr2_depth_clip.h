@@ -29,7 +29,9 @@
 struct DepthClipOutputs
 {
     FfxFloat32x2 fDilatedReactiveMasks;
+#if !FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
     FfxFloat32x4 fTonemapped;
+#endif
 };
 
 FFXM_STATIC const FfxFloat32 DepthClipBaseScale = 4.0f;
@@ -203,6 +205,12 @@ FfxFloat32 ComputeTemporalMotionDivergence(FfxInt32x2 iPxPos)
     return fPxDistance > 1.0f ? ffxLerp(0.0f, 1.0f - ffxSaturate(length(fPrevMotionVector) / length(fMotionVector)), ffxSaturate(ffxPow(fPxDistance / 20.0f, 3.0f))) : 0;
 }
 
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+void PreProcessReactiveMasks(FfxInt32x2 iPxLrPos, FfxFloat32 fMotionDivergence, FFXM_PARAMETER_INOUT DepthClipOutputs results)
+{
+    results.fDilatedReactiveMasks = FfxInt32x2(0.0, fMotionDivergence);
+}
+#else
 void PreProcessReactiveMasks(FfxInt32x2 iPxLrPos, FfxFloat32 fMotionDivergence, FFXM_PARAMETER_INOUT DepthClipOutputs results)
 {
     // Compensate for bilinear sampling in accumulation pass
@@ -286,6 +294,7 @@ void PreProcessReactiveMasks(FfxInt32x2 iPxLrPos, FfxFloat32 fMotionDivergence, 
 
     results.fDilatedReactiveMasks = fReactiveFactor;
 }
+#endif
 
 FfxFloat32x3 ComputePreparedInputColor(FfxInt32x2 iPxLrPos)
 {
@@ -326,11 +335,14 @@ DepthClipOutputs DepthClip(FfxInt32x2 iPxPos)
     const FfxFloat32 fCurrentDepthViewSpace = GetViewSpaceDepth(LoadInputDepth(iPxPos));
 
     DepthClipOutputs results;
+    results.fDilatedReactiveMasks = FfxFloat32x2(0.0, 0.0);
 
     // Compute prepared input color and depth clip
     FfxFloat32 fDepthClip = ComputeDepthClip(fDilatedUv, fDilatedDepth) * EvaluateSurface(iPxPos, fMotionVector);
+#if !FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
     FfxFloat32x3 fPreparedYCoCg = ComputePreparedInputColor(iPxPos);
     results.fTonemapped = FfxFloat32x4(fPreparedYCoCg, fDepthClip);
+#endif
 
     // Compute dilated reactive mask
 #if FFXM_FSR2_OPTION_LOW_RESOLUTION_MOTION_VECTORS
@@ -344,6 +356,9 @@ DepthClipOutputs DepthClip(FfxInt32x2 iPxPos)
 
     PreProcessReactiveMasks(iPxPos, ffxMax(fTemporalMotionDifference, fMotionDivergence), results);
 
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    results.fDilatedReactiveMasks.x = fDepthClip;
+#endif
     return results;
 }
 

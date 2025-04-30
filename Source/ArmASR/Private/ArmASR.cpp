@@ -205,7 +205,8 @@ public:
 		bool AreRelevantMembersSet = true;
 
 		const bool bIsBalancedOrPerformance = (QualityPreset == EShaderQualityPreset::BALANCED) || (QualityPreset == EShaderQualityPreset::PERFORMANCE);
-		const EPixelFormat InternalUpscaledFormat = bIsBalancedOrPerformance ? PF_FloatR11G11B10 : PF_FloatRGBA;
+		const bool bIsUltraPerformance = (QualityPreset == EShaderQualityPreset::ULTRA_PERFORMANCE);
+		const EPixelFormat InternalUpscaledFormat = (bIsUltraPerformance || bIsBalancedOrPerformance) ? PF_FloatR11G11B10 : PF_FloatRGBA;
 		if (!UpscaledColour || UpscaledColour->GetDesc().Format != InternalUpscaledFormat)
 		{
 			AreRelevantMembersSet = false;
@@ -214,7 +215,11 @@ public:
 		{
 			AreRelevantMembersSet = false;
 		}
-		if (!DilatedMotionVectors)
+		if (!DilatedMotionVectors && (QualityPreset != EShaderQualityPreset::ULTRA_PERFORMANCE))
+		{
+			AreRelevantMembersSet = false;
+		}
+		if (!DilatedDepthMotionVectorsInputLuma && (QualityPreset == EShaderQualityPreset::ULTRA_PERFORMANCE))
 		{
 			AreRelevantMembersSet = false;
 		}
@@ -264,6 +269,7 @@ public:
 	TRefCountPtr<IPooledRenderTarget> InternalReactive;
 	TRefCountPtr<IPooledRenderTarget> LumaHistory;
 	TRefCountPtr<IPooledRenderTarget> DilatedMotionVectors;
+	TRefCountPtr<IPooledRenderTarget> DilatedDepthMotionVectorsInputLuma;
 	TRefCountPtr<IPooledRenderTarget> LockStatus;
 	TRefCountPtr<IPooledRenderTarget> NewLock;
 	float PreExposure;
@@ -308,9 +314,10 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 	// Check the flags specified by the user.
 	const bool bRequestedAutoExposure = static_cast<bool>(CVarArmASRAutoExposure.GetValueOnRenderThread());
 
-	const EShaderQualityPreset QualityPreset = EShaderQualityPreset(FMath::Clamp(CVarArmASRShaderQuality.GetValueOnRenderThread(), int32(EShaderQualityPreset::QUALITY), int32(EShaderQualityPreset::PERFORMANCE)));
+	const EShaderQualityPreset QualityPreset = EShaderQualityPreset(FMath::Clamp(CVarArmASRShaderQuality.GetValueOnRenderThread(), int32(EShaderQualityPreset::QUALITY), int32(EShaderQualityPreset::ULTRA_PERFORMANCE)));
 	const bool bIsBalancedOrPerformance = (QualityPreset == EShaderQualityPreset::BALANCED) || (QualityPreset == EShaderQualityPreset::PERFORMANCE);
 	const bool bIsPerformance = (QualityPreset == EShaderQualityPreset::PERFORMANCE);
+	const bool bIsUltraPerformance = (QualityPreset == EShaderQualityPreset::ULTRA_PERFORMANCE);
 
 	const float Sharpness = FMath::Clamp(CVarArmASRSharpness.GetValueOnRenderThread(), 0.0f, 1.0f);
 	const bool bApplySharpening = (Sharpness > 0.0f);
@@ -361,6 +368,7 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 	FRDGTextureRef PrevInternalReactive{ nullptr };
 	FRDGTextureRef PrevLumaHistory{ nullptr };
 	FRDGTextureRef PrevDilatedMotionVectors{ nullptr };
+	FRDGTextureRef PrevDilatedDepthMotionVectorsInputLuma{nullptr};
 	FRDGTextureRef PrevLockStatus{ nullptr };
 	FRDGTextureRef NewLock{ nullptr };
 	float PrevPreExposure{ 0.0 };
@@ -376,7 +384,7 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 		PrevUpscaledColour = GraphBuilder.RegisterExternalTexture(PrevHistory->UpscaledColour, TEXT("PrevUpscaledColour"));
 
 		// Balanced/Performance preset specific
-		if (bIsBalancedOrPerformance)
+		if (bIsUltraPerformance || bIsBalancedOrPerformance)
 		{
 			// Internal reactive history
 			PrevInternalReactive = GraphBuilder.RegisterExternalTexture(PrevHistory->InternalReactive, TEXT("InternalReactive"));
@@ -406,7 +414,15 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 			NewLock = GraphBuilder.RegisterExternalTexture(PrevHistory->NewLock, TEXT("LockMaskTexture"));
 		}
 
-		PrevDilatedMotionVectors = GraphBuilder.RegisterExternalTexture(PrevHistory->DilatedMotionVectors, TEXT("PrevDilatedMotionVectors"));
+		if (bIsUltraPerformance)
+		{
+			PrevDilatedDepthMotionVectorsInputLuma = GraphBuilder.RegisterExternalTexture(PrevHistory->DilatedDepthMotionVectorsInputLuma, TEXT("PrevDilatedDepthMotionVectorsInputLuma"));
+		}
+		else
+		{
+			PrevDilatedMotionVectors = GraphBuilder.RegisterExternalTexture(PrevHistory->DilatedMotionVectors, TEXT("PrevDilatedMotionVectors"));
+		}
+
 		PrevLockStatus = GraphBuilder.RegisterExternalTexture(PrevHistory->LockStatus, TEXT("PrevLockStatus"));
 		PrevPreExposure = PrevHistory->PreExposure;
 	}
@@ -415,6 +431,7 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 		PrevUpscaledColour = GSystemTextures.GetBlackDummy(GraphBuilder);
 		PrevLumaHistory = GSystemTextures.GetBlackDummy(GraphBuilder);
 		PrevDilatedMotionVectors = GSystemTextures.GetBlackDummy(GraphBuilder);
+		PrevDilatedDepthMotionVectorsInputLuma = GSystemTextures.GetBlackDummy(GraphBuilder);
 		PrevLockStatus = GSystemTextures.GetBlackDummy(GraphBuilder);
 		PrevInternalReactive = GSystemTextures.GetBlackDummy(GraphBuilder);
 
@@ -432,7 +449,7 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 	FRDGTextureRef ReactiveMaskTexture = nullptr;
 	FRDGTextureRef CompositeMaskTexture = nullptr;
 
-	if (CVarArmASRCreateReactiveMask.GetValueOnRenderThread() &&
+	if (!bIsUltraPerformance && CVarArmASRCreateReactiveMask.GetValueOnRenderThread() &&
 		ArmASRInfo.PostInputs.SceneTextures)
 	{
 		FRDGTextureDesc ReactiveMaskDesc =
@@ -509,6 +526,7 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 	// ------------------------
 	FArmASRComputeLuminancePyramidCS::FParameters* ClpShaderParameters = GraphBuilder.AllocParameters<FArmASRComputeLuminancePyramidCS::FParameters>();
 	FArmASRComputeLuminanceParameters* ClpParameters = GraphBuilder.AllocParameters<FArmASRComputeLuminanceParameters>();
+	if (!bIsUltraPerformance)
 	{
 		FIntVector workgroupCount(0, 0, 0);
 		SetComputeLuminancePyramidParameters(
@@ -568,6 +586,7 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 	FArmASRReconstructPrevDepthPS::FParameters* RpdShaderParameters = GraphBuilder.AllocParameters<FArmASRReconstructPrevDepthPS::FParameters>();
 	{
 		SetReconstructPrevDepthParameters(
+			bIsUltraPerformance,
 			RpdShaderParameters,
 			ArmASRPassParametersBuffer,
 			MotionVectorTextureNew,
@@ -579,7 +598,9 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 			GraphBuilder);
 
 		// Create shader and add pass.
-		TShaderMapRef<FArmASRReconstructPrevDepthPS> RpdShader(ViewInfo.ShaderMap);
+		FArmASRReconstructPrevDepthPS::FPermutationDomain PermutationVector;
+		PermutationVector.Set<FArmASR_ApplyUltraPerfOpt>(bIsUltraPerformance);
+		TShaderMapRef<FArmASRReconstructPrevDepthPS> RpdShader(ViewInfo.ShaderMap, PermutationVector);
 		FPixelShaderUtils::AddFullscreenPass(
 			GraphBuilder, ViewInfo.ShaderMap,
 			RDG_EVENT_NAME("Reconstruct Previous Depth (PS)"),
@@ -592,7 +613,8 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 	// -----------------
 	FArmASRDepthClipPS::FParameters* DcShaderParameters = GraphBuilder.AllocParameters<FArmASRDepthClipPS::FParameters>();
 
-	FRDGTextureRef DilatedMotionVectorTexture = RpdShaderParameters->RenderTargets[1].GetTexture();
+	FRDGTextureRef DilatedDepthMotionVectorsInputLumaTexture = bIsUltraPerformance ? RpdShaderParameters->RenderTargets[0].GetTexture() : nullptr;
+	FRDGTextureRef DilatedMotionVectorTexture = bIsUltraPerformance ? nullptr : RpdShaderParameters->RenderTargets[1].GetTexture();
 	{
 		SetDepthClipParameters(
 			DcShaderParameters,
@@ -602,6 +624,8 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 			RpdShaderParameters->RenderTargets[0].GetTexture(), // Generated RT from Reconstruct Prev Depth
 			DilatedMotionVectorTexture, // Generated RT from Reconstruct Prev Depth
 			PrevDilatedMotionVectors,
+			DilatedDepthMotionVectorsInputLumaTexture,
+			PrevDilatedDepthMotionVectorsInputLuma,
 			MotionVectorTextureNew,
 			ReactiveMaskTexture,
 			CompositeMaskTexture,
@@ -616,6 +640,7 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 		// Depth clip applies optimizations for the Performance preset
 		PermutationVector.Set<FArmASR_ApplyBalancedOpt>(bIsBalancedOrPerformance);
 		PermutationVector.Set<FArmASR_ApplyPerfOpt>(bIsPerformance);
+		PermutationVector.Set<FArmASR_ApplyUltraPerfOpt>(bIsUltraPerformance);
 		TShaderMapRef<FArmASRDepthClipPS> DcShader(ViewInfo.ShaderMap, PermutationVector);
 		FPixelShaderUtils::AddFullscreenPass(
 			GraphBuilder, ViewInfo.ShaderMap,
@@ -627,17 +652,22 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 
 	// Lock Shader
 	// -----------
+	FRDGTextureRef LockInputLumaTexture = bIsUltraPerformance ? nullptr : RpdShaderParameters->RenderTargets[2].GetTexture();
 	FArmASRLockCS::FParameters* LShaderParameters = GraphBuilder.AllocParameters<FArmASRLockCS::FParameters>();
 	{
 		SetLockParameters(
+			bIsUltraPerformance,
 			LShaderParameters,
 			ArmASRPassParametersBuffer,
-			RpdShaderParameters->RenderTargets[2].GetTexture(), // Generated RT from Reconstruct Prev Depth
+			LockInputLumaTexture, // Generated RT from Reconstruct Prev Depth
+		    DilatedDepthMotionVectorsInputLumaTexture,
 			NewLock,
 			OutputExtents,
 			GraphBuilder
 		);
-		TShaderMapRef<FArmASRLockCS> LShader(ViewInfo.ShaderMap);
+		FArmASRLockCS::FPermutationDomain PermutationVector;
+		PermutationVector.Set<FArmASR_ApplyUltraPerfOpt>(bIsUltraPerformance);
+		TShaderMapRef<FArmASRLockCS> LShader(ViewInfo.ShaderMap, PermutationVector);
 		FComputeShaderUtils::AddPass(
 			GraphBuilder,
 			RDG_EVENT_NAME("Lock (CS)"),
@@ -649,16 +679,19 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 
 	// Accumulate Shader
 	// -----------------
+	FRDGTextureRef ImgMipShadingChangeTexture = bIsUltraPerformance ? nullptr : ClpShaderParameters->rw_img_mip_shading_change->Desc.Texture;
 	FArmASRAccumulatePS::FParameters* AccumulateParameters = GraphBuilder.AllocParameters<FArmASRAccumulatePS::FParameters>();
 	{
 		SetAccumulateParameters(
 			AccumulateParameters,
 			ArmASRPassParametersBuffer,
 			AutoExposureTexture,							   // Generated from Compute Luminance Pyramid or Unreal Engine
-			ClpShaderParameters->rw_img_mip_shading_change->Desc.Texture,   // Generated from Compute Luminance Pyramid
-			RpdShaderParameters->RenderTargets[1].GetTexture(),// Dilated Motion vector is generated from Reconstruct Prev Depth
+		    ImgMipShadingChangeTexture,						   // Generated from Compute Luminance Pyramid
+		    DilatedMotionVectorTexture,						   // Dilated Motion vector is generated from Reconstruct Prev Depth
+			DilatedDepthMotionVectorsInputLumaTexture,
 			DcShaderParameters->RenderTargets[0].GetTexture(), // Dilated Reactive Mask is generated from Depth clip
 			DcShaderParameters->RenderTargets[1].GetTexture(), // Prepared input colour is generated from Depth clip
+		    SceneColorTexture,
 			PrevLockStatus,
 			Outputs.FullRes.Texture,
 			MotionVectorTextureNew,
@@ -677,6 +710,7 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 		// Choose the correct permutation based on quality preset
 		PermutationVector.Set<FArmASR_ApplyBalancedOpt>(bIsBalancedOrPerformance ? 1 : 0);
 		PermutationVector.Set<FArmASR_ApplyPerfOpt>(bIsPerformance ? 1 : 0);
+		PermutationVector.Set<FArmASR_ApplyUltraPerfOpt>(bIsUltraPerformance ? 1 : 0);
 
 		TShaderMapRef<FArmASRAccumulatePS> AccumulateShader(ViewInfo.ShaderMap, PermutationVector);
 		FPixelShaderUtils::AddFullscreenPass(
@@ -715,10 +749,10 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 	// Set up new history
 	TRefCountPtr<FArmASRTemporalAAHistory> NewHistory(new FArmASRTemporalAAHistory());
 
-	if (bIsBalancedOrPerformance)
+	if (bIsUltraPerformance || bIsBalancedOrPerformance)
 	{
 		NewHistory->LumaHistory = nullptr;
-		const int32 TemporalReactiveIdx = bIsBalancedOrPerformance ? 1 : -1;
+		const int32 TemporalReactiveIdx = (bIsUltraPerformance || bIsBalancedOrPerformance) ? 1 : -1;
 		FRDGTextureRef TemporalReactiveTexture = AccumulateParameters->RenderTargets[TemporalReactiveIdx].GetTexture();
 		GraphBuilder.QueueTextureExtraction(TemporalReactiveTexture, &NewHistory->InternalReactive);
 	}
@@ -729,14 +763,21 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 		GraphBuilder.QueueTextureExtraction(LumaHistoryTexture, &NewHistory->LumaHistory);
 	}
 
-	const int32 LockStatusIdx = bIsBalancedOrPerformance ? 2 : 1;
+	const int32 LockStatusIdx = bIsUltraPerformance ? 1 : (bIsBalancedOrPerformance ? 2 : 1);
 	FRDGTextureRef InternalUpscaledColor = AccumulateParameters->RenderTargets[0].GetTexture();
 	FRDGTextureRef LockStatusTexture = AccumulateParameters->RenderTargets[LockStatusIdx].GetTexture();
 
 	GraphBuilder.QueueTextureExtraction(NewLock, &NewHistory->NewLock);
 	GraphBuilder.QueueTextureExtraction(InternalUpscaledColor, &NewHistory->UpscaledColour);
 	GraphBuilder.QueueTextureExtraction(LockStatusTexture, &NewHistory->LockStatus);
-	GraphBuilder.QueueTextureExtraction(DilatedMotionVectorTexture, &NewHistory->DilatedMotionVectors);
+	if (bIsUltraPerformance)
+	{
+		GraphBuilder.QueueTextureExtraction(DilatedDepthMotionVectorsInputLumaTexture, &NewHistory->DilatedDepthMotionVectorsInputLuma);
+	}
+	else
+	{
+		GraphBuilder.QueueTextureExtraction(DilatedMotionVectorTexture, &NewHistory->DilatedMotionVectors);
+	}
 	NewHistory->PreExposure = ArmASRPassParameters->fPreExposure;
 
 	Outputs.NewHistory = NewHistory;

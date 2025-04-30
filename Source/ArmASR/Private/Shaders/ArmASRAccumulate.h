@@ -32,7 +32,7 @@ class FArmASR_DoSharpening : SHADER_PERMUTATION_BOOL("FFXM_FSR2_OPTION_APPLY_SHA
 class FArmASRAccumulatePS : public FGlobalShader
 {
 public:
-	using FPermutationDomain = TShaderPermutationDomain<FArmASR_DoSharpening, FArmASR_ApplyBalancedOpt, FArmASR_ApplyPerfOpt>;
+	using FPermutationDomain = TShaderPermutationDomain<FArmASR_DoSharpening, FArmASR_ApplyBalancedOpt, FArmASR_ApplyPerfOpt, FArmASR_ApplyUltraPerfOpt>;
 
 	DECLARE_GLOBAL_SHADER(FArmASRAccumulatePS);
 	SHADER_USE_PARAMETER_STRUCT(FArmASRAccumulatePS, FGlobalShader);
@@ -43,9 +43,11 @@ public:
 		SHADER_PARAMETER_SAMPLER(SamplerState, s_PointClamp)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_exposure)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_reactive_masks)
-		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_motion_vectors)
-		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_motion_vectors)
-		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_internal_upscaled_color)
+	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_motion_vectors)
+	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_depth_motion_vectors_input_luma)
+	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_motion_vectors)
+	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_internal_upscaled_color)
+	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_color_jittered)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_lock_status)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_prepared_input_color)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_imgMips)
@@ -75,8 +77,10 @@ inline void SetAccumulateParameters(
 	const FRDGTextureSRVRef AutoExposureTexture,        // Generated UAV from CLP shader or Unreal Engine
 	const FRDGTextureRef ImgMipsTexture,                // Generated UAV from CLP shader
 	const FRDGTextureRef DilatedMotionVectorTexture,    // Generated RT from RPD shader
+	const FRDGTextureRef DilatedDepthMotionVectorsInputLumaTexture, // Generated RT from RPD shader
 	const FRDGTextureRef DilatedReactiveMaskTexture,    // Generated RT from DC shader
 	const FRDGTextureRef PreparedInputColor,            // Generated RT from DC shader
+	const FRDGTextureSRVRef SceneColorTexture,
 	const FRDGTextureRef PrevLockStatusTexture,         // From history
 	const FRDGTextureRef OutputTexture,
 	const FRDGTextureRef MotionVectorTexture,
@@ -101,9 +105,40 @@ inline void SetAccumulateParameters(
 	FRDGTextureSRVRef DilatedReactiveMaskSRVTexture = GraphBuilder.CreateSRV(DilatedReactiveMaskSRVDesc);
 	AccumulateParameters->r_dilated_reactive_masks = DilatedReactiveMaskSRVTexture;
 
-	FRDGTextureSRVDesc DilatedMotionVectorSRVDesc = FRDGTextureSRVDesc::Create(DilatedMotionVectorTexture);
-	FRDGTextureSRVRef DilatedMotionVectorSRVTexture = GraphBuilder.CreateSRV(DilatedMotionVectorSRVDesc);
-	AccumulateParameters->r_dilated_motion_vectors = DilatedMotionVectorSRVTexture;
+	const bool bIsUltraPerformance = (QualityPreset == EShaderQualityPreset::ULTRA_PERFORMANCE);
+	if (bIsUltraPerformance)
+	{
+		FRDGTextureSRVDesc DilatedDepthMotionVectorsInputLumaSRVDesc = FRDGTextureSRVDesc::Create(DilatedDepthMotionVectorsInputLumaTexture);
+		FRDGTextureSRVRef DilatedDepthMotionVectorsInputLumaSRVTexture = GraphBuilder.CreateSRV(DilatedDepthMotionVectorsInputLumaSRVDesc);
+		AccumulateParameters->r_dilated_depth_motion_vectors_input_luma = DilatedDepthMotionVectorsInputLumaSRVTexture;
+
+		// input color
+		AccumulateParameters->r_input_color_jittered = SceneColorTexture;
+	}
+	else
+	{
+		FRDGTextureSRVDesc DilatedMotionVectorSRVDesc = FRDGTextureSRVDesc::Create(DilatedMotionVectorTexture);
+		FRDGTextureSRVRef DilatedMotionVectorSRVTexture = GraphBuilder.CreateSRV(DilatedMotionVectorSRVDesc);
+		AccumulateParameters->r_dilated_motion_vectors = DilatedMotionVectorSRVTexture;
+
+		// Prepared colour is created in Depth Clip shader.
+		FRDGTextureSRVDesc PreparedInputColorSRVDesc = FRDGTextureSRVDesc::Create(PreparedInputColor);
+		FRDGTextureSRVRef PreparedInputSRVTexture = GraphBuilder.CreateSRV(PreparedInputColorSRVDesc);
+		AccumulateParameters->r_prepared_input_color = PreparedInputSRVTexture;
+
+		// r_luma_history
+		FRDGTextureSRVDesc LumaHistorySRVDesc = FRDGTextureSRVDesc::Create(PrevLumaHistoryTexture);
+		AccumulateParameters->r_luma_history = GraphBuilder.CreateSRV(LumaHistorySRVDesc);
+
+		// r_internal_temporal_reactive (Used by Balanced)
+		FRDGTextureSRVDesc TemporalReactiveHistorySRVDesc = FRDGTextureSRVDesc::Create(PrevTemporalReactiveTexture);
+		AccumulateParameters->r_internal_temporal_reactive = GraphBuilder.CreateSRV(TemporalReactiveHistorySRVDesc);
+
+		// r_imgMips
+		FRDGTextureSRVDesc ImgMipsSRVDesc = FRDGTextureSRVDesc::Create(ImgMipsTexture);
+		FRDGTextureSRVRef ImgMipsSRVTexture = GraphBuilder.CreateSRV(ImgMipsSRVDesc);
+		AccumulateParameters->r_imgMips = GraphBuilder.CreateSRV(ImgMipsSRVDesc);
+	}
 
 	FRDGTextureSRVDesc MotionVectorSRVDesc = FRDGTextureSRVDesc::Create(MotionVectorTexture);
 	FRDGTextureSRVRef MotionVectorSRVTexture = GraphBuilder.CreateSRV(MotionVectorSRVDesc);
@@ -118,16 +153,6 @@ inline void SetAccumulateParameters(
 	FRDGTextureSRVDesc LockStatusSRVDesc = FRDGTextureSRVDesc::Create(PrevLockStatusTexture);
 	FRDGTextureSRVRef LockStatusSRVTexture = GraphBuilder.CreateSRV(LockStatusSRVDesc);
 	AccumulateParameters->r_lock_status = LockStatusSRVTexture;
-
-	// Prepared colour is created in Depth Clip shader.
-	FRDGTextureSRVDesc PreparedInputColorSRVDesc = FRDGTextureSRVDesc::Create(PreparedInputColor);
-	FRDGTextureSRVRef PreparedInputSRVTexture = GraphBuilder.CreateSRV(PreparedInputColorSRVDesc);
-	AccumulateParameters->r_prepared_input_color = PreparedInputSRVTexture;
-
-	// r_imgMips
-	FRDGTextureSRVDesc ImgMipsSRVDesc = FRDGTextureSRVDesc::Create(ImgMipsTexture);
-	FRDGTextureSRVRef ImgMipsSRVTexture = GraphBuilder.CreateSRV(ImgMipsSRVDesc);
-	AccumulateParameters->r_imgMips = GraphBuilder.CreateSRV(ImgMipsSRVDesc);
 
 	// r_auto_exposure
 	AccumulateParameters->r_auto_exposure = AutoExposureTexture;
@@ -145,7 +170,7 @@ inline void SetAccumulateParameters(
 	AccumulateParameters->r_new_locks = GraphBuilder.CreateSRV(LockMaskSRVDesc);
 
 	const bool bIsBalancedOrPerformance = (QualityPreset == EShaderQualityPreset::BALANCED) || (QualityPreset == EShaderQualityPreset::PERFORMANCE);
-	const EPixelFormat InternalUpscaledFormat = bIsBalancedOrPerformance ? PF_FloatR11G11B10 : PF_FloatRGBA;
+	const EPixelFormat InternalUpscaledFormat = (bIsUltraPerformance || bIsBalancedOrPerformance) ? PF_FloatR11G11B10 : PF_FloatRGBA;
 
 	// Create textures for all RenderTargets
 	FRDGTextureDesc InternalUpscaledOutputColorDesc = FRDGTextureDesc::Create2D(OutputExtents, InternalUpscaledFormat, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_RenderTargetable, 1, 1);
@@ -160,7 +185,11 @@ inline void SetAccumulateParameters(
 	const FScreenPassRenderTarget UpscaledOutput(OutputTexture, OutputRect, ERenderTargetLoadAction::ENoAction);
 
 	AccumulateParameters->RenderTargets[0] = InternalUpscaledColorRT.GetRenderTargetBinding();
-	if (!bIsBalancedOrPerformance)
+	if (bIsUltraPerformance)
+	{
+		AccumulateParameters->RenderTargets[1] = LockStatusRT.GetRenderTargetBinding();
+	}
+	else if (!bIsBalancedOrPerformance)
 	{
 		AccumulateParameters->RenderTargets[1] = LockStatusRT.GetRenderTargetBinding();
 
@@ -182,7 +211,8 @@ inline void SetAccumulateParameters(
 	const bool bUseRCAS = (Sharpness > 0.0f);
 	if (!bUseRCAS)
 	{
-		AccumulateParameters->RenderTargets[3] = UpscaledOutput.GetRenderTargetBinding();
+		const size_t index = bIsUltraPerformance ? 2 : 3;
+		AccumulateParameters->RenderTargets[index] = UpscaledOutput.GetRenderTargetBinding();
 	}
 
 	// Assign common parameters to constant buffer.

@@ -26,7 +26,7 @@
 #define FFXM_FSR2_UPSAMPLE_USE_LANCZOS_9_TAP 0
 #define FFXM_FSR2_UPSAMPLE_USE_LANCZOS_5_TAP 1
 
-#if FFXM_SHADER_QUALITY_OPT_UPSCALING_LANCZOS_5TAP
+#if FFXM_SHADER_QUALITY_OPT_UPSCALING_LANCZOS_5TAP  || FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
 #define FFXM_FSR2_UPSAMPLE_KERNEL FFXM_FSR2_UPSAMPLE_USE_LANCZOS_5_TAP
 FFXM_STATIC const FfxInt32 iLanczos2SampleCount = 5;
 #else
@@ -70,6 +70,24 @@ FfxFloat32 ComputeMaxKernelWeight() {
     return ffxMin(FfxFloat32(1.99f), fKernelWeight);
 }
 
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+FfxFloat32x3 ComputePreparedInputColor(FfxInt32x2 iPxLrPos)
+{
+    //We assume linear data. if non-linear input (sRGB, ...),
+    //then we should convert to linear first and back to sRGB on output.
+    FfxFloat32x3 fRgb = ffxMax(FfxFloat32x3(0, 0, 0), LoadInputColor(iPxLrPos));
+
+    fRgb = PrepareRgb(fRgb, Exposure(), PreExposure());
+#if FFXM_SHADER_QUALITY_OPT_TONEMAPPED_RGB_PREPARED_INPUT_COLOR
+    const FfxFloat32x3 fPreparedYCoCg = Tonemap(fRgb);
+#else
+    const FfxFloat32x3 fPreparedYCoCg = RGBToYCoCg(fRgb);
+#endif
+
+    return fPreparedYCoCg;
+}
+#endif
+
 #if FFXM_HALF
 FfxFloat32x4 ComputeUpsampledColorAndWeight(const AccumulationPassCommonParams params,
     FFXM_PARAMETER_INOUT RectificationBoxMin16 clippingBox, FfxFloat32 fReactiveFactor)
@@ -108,7 +126,7 @@ FfxFloat32x4 ComputeUpsampledColorAndWeight(const AccumulationPassCommonParams p
 
     FFXM_MIN16_F2 fOffsetTL = offsetTL;
 
-#if FFXM_FSR2_UPSAMPLE_KERNEL == FFXM_FSR2_UPSAMPLE_USE_LANCZOS_9_TAP
+#if FFXM_FSR2_UPSAMPLE_KERNEL == FFXM_FSR2_UPSAMPLE_USE_LANCZOS_9_TAP && !FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
     FFXM_MIN16_F3 fSamples[iLanczos2SampleCount];
     // Collect samples
     GatherPreparedInputColorRGBQuad(FfxFloat32x2(-0.5, -0.5) * unitOffsetUv + iSrcInputUv,
@@ -145,16 +163,24 @@ FfxFloat32x4 ComputeUpsampledColorAndWeight(const AccumulationPassCommonParams p
             }
         }
     }
-#elif FFXM_FSR2_UPSAMPLE_KERNEL == FFXM_FSR2_UPSAMPLE_USE_LANCZOS_5_TAP
-
+#elif FFXM_FSR2_UPSAMPLE_KERNEL == FFXM_FSR2_UPSAMPLE_USE_LANCZOS_5_TAP || FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    
     FFXM_MIN16_F3 fSamples[iLanczos2SampleCount];
     // Collect samples
     FfxInt32x2 rowCol [iLanczos2SampleCount] = {FfxInt32x2(0, -1), FfxInt32x2(-1, 0), FfxInt32x2(0, 0), FfxInt32x2(1, 0), FfxInt32x2(0, 1)};
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    fSamples[0] = ComputePreparedInputColor(rowCol[0] + iSrcInputPos);
+    fSamples[1] = ComputePreparedInputColor(rowCol[1] + iSrcInputPos);
+    fSamples[2] = ComputePreparedInputColor(rowCol[2] + iSrcInputPos);
+    fSamples[3] = ComputePreparedInputColor(rowCol[3] + iSrcInputPos);
+    fSamples[4] = ComputePreparedInputColor(rowCol[4] + iSrcInputPos); 
+#else
     fSamples[0] = LoadPreparedInputColor(rowCol[0] + iSrcInputPos);
     fSamples[1] = LoadPreparedInputColor(rowCol[1] + iSrcInputPos);
     fSamples[2] = LoadPreparedInputColor(rowCol[2] + iSrcInputPos);
     fSamples[3] = LoadPreparedInputColor(rowCol[3] + iSrcInputPos);
     fSamples[4] = LoadPreparedInputColor(rowCol[4] + iSrcInputPos);
+#endif
     FFXM_UNROLL
     for (FfxInt32 idx = 0; idx < iLanczos2SampleCount; idx++)
     {

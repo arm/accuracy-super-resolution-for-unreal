@@ -25,6 +25,10 @@
 
 struct AccumulateOutputs
 {
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    FfxFloat32x4 fColorAndWeight;
+    FfxFloat32x2 fLockStatus;
+#else
 #if !FFXM_SHADER_QUALITY_OPT_SEPARATE_TEMPORAL_REACTIVE
     FfxFloat32x4 fColorAndWeight;
 #else
@@ -33,6 +37,7 @@ struct AccumulateOutputs
 #endif
     FfxFloat32x2 fLockStatus;
     FfxFloat32x4 fLumaHistory;
+#endif
 #if (FFXM_FSR2_OPTION_APPLY_SHARPENING == 0)
     FfxFloat32x3 fColor;
 #endif
@@ -165,6 +170,7 @@ FfxFloat32x3 ComputeBaseAccumulationWeight(const AccumulationPassCommonParams pa
     return fBaseAccumulation.xxx;
 }
 
+#if !FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
 #if FFXM_HALF
 FfxFloat32 ComputeLumaInstabilityFactor(const AccumulationPassCommonParams params, RectificationBoxMin16 clippingBox, FfxFloat32 fThisFrameReactiveFactor, FfxFloat32 fLuminanceDiff, FFXM_PARAMETER_INOUT AccumulateOutputs result)
 #else
@@ -224,6 +230,7 @@ FfxFloat32 ComputeLumaInstabilityFactor(const AccumulationPassCommonParams param
 
     return fLumaInstability * FfxFloat32(fCurrentFrameLumaHistory[N_MINUS_4] != 0);
 }
+#endif
 
 FfxFloat32 ComputeTemporalReactiveFactor(const AccumulationPassCommonParams params, FfxFloat32 fTemporalReactiveFactor)
 {
@@ -246,13 +253,22 @@ FfxFloat32 ComputeTemporalReactiveFactor(const AccumulationPassCommonParams para
 void initReactiveMaskFactors(FFXM_PARAMETER_INOUT AccumulationPassCommonParams params)
 {
     const FFXM_MIN16_F2 fDilatedReactiveMasks = FFXM_MIN16_F2(SampleDilatedReactiveMasks(params.fLrUv_HwSampler));
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    params.fDilatedReactiveFactor = 0.0;
+#else
     params.fDilatedReactiveFactor = fDilatedReactiveMasks.x;
+#endif
     params.fAccumulationMask = fDilatedReactiveMasks.y;
 }
 
 void initDepthClipFactors(FFXM_PARAMETER_INOUT AccumulationPassCommonParams params)
 {
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    const FFXM_MIN16_F2 fDilatedReactiveMasks = FFXM_MIN16_F2(SampleDilatedReactiveMasks(params.fLrUv_HwSampler));
+    params.fDepthClipFactor = fDilatedReactiveMasks.x;
+#else
     params.fDepthClipFactor = FFXM_MIN16_F(ffxSaturate(SampleDepthClip(params.fLrUv_HwSampler)));
+#endif
 }
 
 void initIsNewSample(FFXM_PARAMETER_INOUT AccumulationPassCommonParams params)
@@ -336,7 +352,7 @@ AccumulateOutputs Accumulate(FfxInt32x2 iPxHrPos)
 
     FinalizeLockStatus(params, fLockStatus, fUpsampledColorAndWeight.w, results);
 
-#if FFXM_SHADER_QUALITY_OPT_DISABLE_LUMA_INSTABILITY
+#if FFXM_SHADER_QUALITY_OPT_DISABLE_LUMA_INSTABILITY || FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
     const FfxFloat32 fLumaInstabilityFactor = 0.0f;
 #else
     const FfxFloat32 fLumaInstabilityFactor = ComputeLumaInstabilityFactor(params, clippingBox, fThisFrameReactiveFactor, fLuminanceDiff, results);
@@ -362,7 +378,7 @@ AccumulateOutputs Accumulate(FfxInt32x2 iPxHrPos)
     // Get new temporal reactive factor
     fTemporalReactiveFactor = FFXM_MIN16_F(ComputeTemporalReactiveFactor(params, fThisFrameReactiveFactor));
 
-#if !FFXM_SHADER_QUALITY_OPT_SEPARATE_TEMPORAL_REACTIVE
+#if !FFXM_SHADER_QUALITY_OPT_SEPARATE_TEMPORAL_REACTIVE || FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
     results.fColorAndWeight = FfxFloat32x4(fHistoryColor, fTemporalReactiveFactor);
 #else
     // Output the upscaled color and the temporal reactive factor if these are contained in separate textures

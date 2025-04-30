@@ -147,7 +147,12 @@ FfxFloat32x2 MotionVectorJitterCancellation()
 
 FfxFloat32 PreExposure()
 {
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    return 1.0;
+#else
     return fPreExposure;
+#endif
+
 }
 
 FfxFloat32 PreviousFramePreExposure()
@@ -376,6 +381,13 @@ SamplerState s_LinearClamp : register(s1);
         Texture2D<FfxFloat32> r_internal_temporal_reactive : FFXM_FSR2_DECLARE_SRV(FSR2_BIND_SRV_TEMPORAL_REACTIVE);
     #endif
 
+    #if defined FSR2_BIND_SRV_DILATED_DEPTH_MOTION_VECTORS_INPUT_LUMA
+        Texture2D<FfxFloat32x4> r_dilated_depth_motion_vectors_input_luma : FFXM_FSR2_DECLARE_SRV(FSR2_BIND_SRV_DILATED_DEPTH_MOTION_VECTORS_INPUT_LUMA);
+    #endif
+    #if defined FSR2_BIND_SRV_PREV_DILATED_DEPTH_MOTION_VECTORS_INPUT_LUMA
+        Texture2D<FfxFloat32x4> r_prev_dilated_depth_motion_vectors_input_luma : FFXM_FSR2_DECLARE_SRV(FSR2_BIND_SRV_PREV_DILATED_DEPTH_MOTION_VECTORS_INPUT_LUMA);
+    #endif
+
     // UAV declarations
     #if defined FSR2_BIND_UAV_RECONSTRUCTED_PREV_NEAREST_DEPTH
         RWTexture2D<FfxUInt32> rw_reconstructed_previous_nearest_depth : FFXM_FSR2_DECLARE_UAV(FSR2_BIND_UAV_RECONSTRUCTED_PREV_NEAREST_DEPTH);
@@ -476,11 +488,15 @@ FfxFloat32 SampleInputDepth(FfxFloat32x2 fUV)
 }
 #endif
 
-#if defined(FSR2_BIND_SRV_REACTIVE_MASK)
 FfxFloat32 LoadReactiveMask(FfxUInt32x2 iPxPos)
 {
+#if defined(FSR2_BIND_SRV_REACTIVE_MASK)
     return r_reactive_mask[iPxPos];
+#else
+    return 0.0;
+#endif
 }
+
 /*
    col00 (-1,1) *------* col10 (0,-1)
                 |      |
@@ -493,18 +509,22 @@ void GatherReactiveRQuad(FfxFloat32x2 fUV,
     FFXM_PARAMETER_INOUT FFXM_MIN16_F col01,
     FFXM_PARAMETER_INOUT FFXM_MIN16_F col11)
 {
+#if defined(FSR2_BIND_SRV_REACTIVE_MASK)
     FFXM_MIN16_F4 rrrr = r_reactive_mask.GatherRed(s_PointClamp, fUV);
     col01 = FFXM_MIN16_F(rrrr.x);
     col11 = FFXM_MIN16_F(rrrr.y);
     col10 = FFXM_MIN16_F(rrrr.z);
     col00 = FFXM_MIN16_F(rrrr.w);
-}
 #endif
+}
 
-#if defined(FSR2_BIND_SRV_TRANSPARENCY_AND_COMPOSITION_MASK)
 FfxFloat32 LoadTransparencyAndCompositionMask(FfxUInt32x2 iPxPos)
 {
+#if defined(FSR2_BIND_SRV_TRANSPARENCY_AND_COMPOSITION_MASK)
     return r_transparency_and_composition_mask[iPxPos];
+#else
+    return 0.0;
+#endif
 }
 /*
    col00 (-1,1) *------* col10 (0,-1)
@@ -518,13 +538,14 @@ void GatherTransparencyAndCompositionMaskRQuad(FfxFloat32x2 fUV,
     FFXM_PARAMETER_INOUT FFXM_MIN16_F col01,
     FFXM_PARAMETER_INOUT FFXM_MIN16_F col11)
 {
+#if defined(FSR2_BIND_SRV_TRANSPARENCY_AND_COMPOSITION_MASK)
     FFXM_MIN16_F4 rrrr = r_transparency_and_composition_mask.GatherRed(s_PointClamp, fUV);
     col01 = FFXM_MIN16_F(rrrr.x);
     col11 = FFXM_MIN16_F(rrrr.y);
     col10 = FFXM_MIN16_F(rrrr.z);
     col00 = FFXM_MIN16_F(rrrr.w);
-}
 #endif
+}
 
 #if defined(FSR2_BIND_SRV_INPUT_COLOR)
 FFXM_MIN16_F3 LoadInputColor(FfxUInt32x2 iPxPos)
@@ -722,10 +743,15 @@ void StoreLockStatus(FfxUInt32x2 iPxPos, FfxFloat32x2 fLockStatus)
 }
 #endif
 
-#if defined(FSR2_BIND_SRV_LOCK_INPUT_LUMA)
 FFXM_MIN16_F LoadLockInputLuma(FfxUInt32x2 iPxPos)
 {
+#if defined(FSR2_BIND_SRV_LOCK_INPUT_LUMA)
     return r_lock_input_luma[iPxPos];
+#elif defined(FSR2_BIND_SRV_DILATED_DEPTH_MOTION_VECTORS_INPUT_LUMA)
+    return r_dilated_depth_motion_vectors_input_luma[iPxPos].w;
+#else
+    return 0.0;
+#endif
 }
 /*
    col00 (-1,1) *------* col10 (0,-1)
@@ -739,13 +765,17 @@ void GatherLockInputLumaRQuad(FfxFloat32x2 fUV,
     FFXM_PARAMETER_INOUT FFXM_MIN16_F col01,
     FFXM_PARAMETER_INOUT FFXM_MIN16_F col11)
 {
-    FFXM_MIN16_F4 rrrr = r_lock_input_luma.GatherRed(s_PointClamp, fUV);
+    FFXM_MIN16_F4 rrrr;
+#if defined(FSR2_BIND_SRV_LOCK_INPUT_LUMA)
+    rrrr = r_lock_input_luma.GatherRed(s_PointClamp, fUV);
+#elif defined(FSR2_BIND_SRV_DILATED_DEPTH_MOTION_VECTORS_INPUT_LUMA)
+    rrrr = r_dilated_depth_motion_vectors_input_luma.GatherAlpha(s_PointClamp, fUV);
+#endif
     col01 = FFXM_MIN16_F(rrrr.x);
     col11 = FFXM_MIN16_F(rrrr.y);
     col10 = FFXM_MIN16_F(rrrr.z);
     col00 = FFXM_MIN16_F(rrrr.w);
 }
-#endif
 
 #if defined(FSR2_BIND_SRV_NEW_LOCKS)
 FfxFloat32 LoadNewLocks(FfxUInt32x2 iPxPos)
@@ -821,29 +851,44 @@ void StoreReconstructedDepth(FfxUInt32x2 iPxSample, FfxFloat32 fDepth)
 }
 #endif
 
-#if defined(FSR2_BIND_SRV_DILATED_MOTION_VECTORS)
 FFXM_MIN16_F2 LoadDilatedMotionVector(FfxUInt32x2 iPxInput)
 {
+#if defined(FSR2_BIND_SRV_DILATED_MOTION_VECTORS)
     return r_dilated_motion_vectors[iPxInput].xy;
-}
+#elif defined(FSR2_BIND_SRV_DILATED_DEPTH_MOTION_VECTORS_INPUT_LUMA)
+    return r_dilated_depth_motion_vectors_input_luma[iPxInput].yz;
+#else
+    return FFXM_MIN16_F2(0.0, 0.0);
 #endif
+}
 
 #if defined(FSR2_BIND_SRV_PREVIOUS_DILATED_MOTION_VECTORS)
 FFXM_MIN16_F2 LoadPreviousDilatedMotionVector(FfxUInt32x2 iPxInput)
 {
     return r_previous_dilated_motion_vectors[iPxInput].xy;
 }
+#endif
 
 FFXM_MIN16_F2 SamplePreviousDilatedMotionVector(FfxFloat32x2 uv)
 {
+#if defined(FSR2_BIND_SRV_PREVIOUS_DILATED_MOTION_VECTORS)
     return r_previous_dilated_motion_vectors.SampleLevel(s_LinearClamp, uv, 0).xy;
-}
+#elif defined(FSR2_BIND_SRV_PREV_DILATED_DEPTH_MOTION_VECTORS_INPUT_LUMA)
+    return r_prev_dilated_depth_motion_vectors_input_luma.SampleLevel(s_LinearClamp, uv, 0).yz;
+#else
+    return FFXM_MIN16_F2(0.0, 0.0);
 #endif
+}
 
-#if defined(FSR2_BIND_SRV_DILATED_DEPTH)
 FfxFloat32 LoadDilatedDepth(FfxUInt32x2 iPxInput)
 {
+#if defined(FSR2_BIND_SRV_DILATED_DEPTH)
     return r_dilatedDepth[iPxInput];
+#elif defined(FSR2_BIND_SRV_DILATED_DEPTH_MOTION_VECTORS_INPUT_LUMA)
+    return r_dilated_depth_motion_vectors_input_luma[iPxInput].x; // R16 cast to R32
+#else
+    return 0.0;
+#endif
 }
 /*
    dd00 (-1,1)  *------* dd10 (0,-1)
@@ -857,13 +902,17 @@ void GatherDilatedDepthRQuad(FfxFloat32x2 fUV,
     FFXM_PARAMETER_INOUT FfxFloat32 dd01,
     FFXM_PARAMETER_INOUT FfxFloat32 dd11)
 {
-    FfxFloat32x4 rrrr = r_dilatedDepth.GatherRed(s_PointClamp, fUV);
+    FfxFloat32x4 rrrr;
+#if defined(FSR2_BIND_SRV_DILATED_DEPTH)
+    rrrr = r_dilatedDepth.GatherRed(s_PointClamp, fUV);
+#elif defined(FSR2_BIND_SRV_DILATED_DEPTH_MOTION_VECTORS_INPUT_LUMA)
+    rrrr = r_dilated_depth_motion_vectors_input_luma.GatherRed(s_PointClamp, fUV);
+#endif
     dd01 = FfxFloat32(rrrr.x);
     dd11 = FfxFloat32(rrrr.y);
     dd10 = FfxFloat32(rrrr.z);
     dd00 = FfxFloat32(rrrr.w);
 }
-#endif
 
 #if defined(FSR2_BIND_SRV_INPUT_EXPOSURE)
 FfxFloat32 Exposure()
@@ -875,6 +924,11 @@ FfxFloat32 Exposure()
     }
 
     return exposure;
+}
+#elif defined(FFXM_FSR2_OPTION_SHADER_OPT_PERFORMANCE)
+FfxFloat32 Exposure()
+{
+    return 1.0;
 }
 #endif
 

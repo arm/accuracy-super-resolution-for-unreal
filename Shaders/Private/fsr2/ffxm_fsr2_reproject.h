@@ -358,7 +358,9 @@ void ReprojectHistoryColor(const AccumulationPassCommonParams params, FFXM_PARAM
 #endif
 
     //Compute temporal reactivity info
-#if FFXM_FSR2_OPTION_SHADER_OPT_BALANCED
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    fTemporalReactiveFactor = 0.0;
+#elif FFXM_FSR2_OPTION_SHADER_OPT_BALANCED
     fTemporalReactiveFactor = FfxFloat16(ffxSaturate(abs(SampleTemporalReactive(params.fReprojectedHrUv))));
 #else
     fTemporalReactiveFactor = FfxFloat16(ffxSaturate(abs(fHistory.w)));

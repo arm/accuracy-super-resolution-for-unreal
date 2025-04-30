@@ -502,39 +502,55 @@ FfxFloat32 GetMaxDistanceInMeters()
 
 FfxFloat32x3 PrepareRgb(FfxFloat32x3 fRgb, FfxFloat32 fExposure, FfxFloat32 fPreExposure)
 {
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    return fRgb;
+#else
     fRgb /= fPreExposure;
     fRgb *= fExposure;
 
     fRgb = clamp(fRgb, 0.0f, FSR2_FP16_MAX);
 
     return fRgb;
+#endif
 }
 
 FfxFloat32x3 UnprepareRgb(FfxFloat32x3 fRgb, FfxFloat32 fExposure)
 {
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    return fRgb;
+#else
     fRgb /= fExposure;
     fRgb *= PreExposure();
 
     return fRgb;
+#endif
 }
 
 #if FFXM_HALF
 FfxFloat16x3 PrepareRgb(FfxFloat16x3 fRgb, FfxFloat16 fExposure, FfxFloat16 fPreExposure)
 {
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    return fRgb;
+#else
     fRgb /= fPreExposure;
     fRgb *= fExposure;
 
     fRgb = clamp(fRgb, FfxFloat16(0.0f), FfxFloat16(FSR2_FP16_MAX));
 
     return fRgb;
+#endif
 }
 
 FfxFloat16x3 UnprepareRgb(FfxFloat16x3 fRgb, FfxFloat16 fExposure)
 {
+#if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+    return fRgb;
+#else
     fRgb /= fExposure;
     fRgb *= FfxFloat16(PreExposure());
 
     return fRgb;
+#endif
 }
 #endif
 
