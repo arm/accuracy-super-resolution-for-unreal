@@ -37,10 +37,10 @@
 #define FFXM_SHADER_QUALITY_OPT_SEPARATE_TEMPORAL_REACTIVE FFXM_SHADER_QUALITY_BALANCED_OR_PERFORMANCE
 /// Both Balanced/Performance. Disable deringing when doing the color reprojection with the history
 #define FFXM_SHADER_QUALITY_OPT_DISABLE_DERINGING FFXM_SHADER_QUALITY_BALANCED_OR_PERFORMANCE
-/// Both Balanced/Performance. Disable the Luma stability factor
-#define FFXM_SHADER_QUALITY_OPT_DISABLE_LUMA_INSTABILITY FFXM_SHADER_QUALITY_BALANCED_OR_PERFORMANCE
-/// Both Balanced/Performance. Use a 5-tap Lanczos kernel instead of the 9-tap used for `Quality` for upsampling
-#define FFXM_SHADER_QUALITY_OPT_UPSCALING_LANCZOS_5TAP FFXM_SHADER_QUALITY_BALANCED_OR_PERFORMANCE
+/// Balanced, Performance and Ultra Performance all disable the Luma stability factor.
+#define FFXM_SHADER_QUALITY_OPT_DISABLE_LUMA_INSTABILITY FFXM_SHADER_QUALITY_BALANCED_OR_PERFORMANCE || FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+/// Balanced, Performance and Ultra Performance all use a 5-tap Lanczos kernel instead of the 9-tap used for `Quality` for upsampling.
+#define FFXM_SHADER_QUALITY_OPT_UPSCALING_LANCZOS_5TAP FFXM_SHADER_QUALITY_BALANCED_OR_PERFORMANCE || FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
 /// Balanced. Use Catmull-Rom (9 samples) for history reprojection
 #define FFXM_SHADER_QUALITY_OPT_REPROJECT_CATMULL_9TAP FFXM_FSR2_OPTION_SHADER_OPT_BALANCED
 /// Performance. PreparedInputColor is now stored as R8G8B8A8_Unorm tonemapped data. Rectification don't use `YCoCg` anymore

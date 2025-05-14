@@ -1,5 +1,5 @@
 // Copyright  © 2023 Advanced Micro Devices, Inc.
-// Copyright © 2024 Arm Limited.
+// Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -26,7 +26,7 @@
 #define FFXM_FSR2_UPSAMPLE_USE_LANCZOS_9_TAP 0
 #define FFXM_FSR2_UPSAMPLE_USE_LANCZOS_5_TAP 1
 
-#if FFXM_SHADER_QUALITY_OPT_UPSCALING_LANCZOS_5TAP  || FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+#if FFXM_SHADER_QUALITY_OPT_UPSCALING_LANCZOS_5TAP
 #define FFXM_FSR2_UPSAMPLE_KERNEL FFXM_FSR2_UPSAMPLE_USE_LANCZOS_5_TAP
 FFXM_STATIC const FfxInt32 iLanczos2SampleCount = 5;
 #else

@@ -31,8 +31,6 @@
 #define FSR2_BIND_UAV_RECONSTRUCTED_PREV_NEAREST_DEPTH      4
 #endif
 
-#define FSR2_BIND_UAV_RECONSTRUCTED_PREV_NEAREST_DEPTH      4
-
 #define FSR2_BIND_CB_FSR2                                   0
 
 #include "ffxm_fsr2_callbacks_hlsl.h"

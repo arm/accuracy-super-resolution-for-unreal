@@ -1,5 +1,5 @@
 // Copyright  © 2023 Advanced Micro Devices, Inc.
-// Copyright © 2024 Arm Limited.
+// Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -352,7 +352,7 @@ AccumulateOutputs Accumulate(FfxInt32x2 iPxHrPos)
 
     FinalizeLockStatus(params, fLockStatus, fUpsampledColorAndWeight.w, results);
 
-#if FFXM_SHADER_QUALITY_OPT_DISABLE_LUMA_INSTABILITY || FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
+#if FFXM_SHADER_QUALITY_OPT_DISABLE_LUMA_INSTABILITY
     const FfxFloat32 fLumaInstabilityFactor = 0.0f;
 #else
     const FfxFloat32 fLumaInstabilityFactor = ComputeLumaInstabilityFactor(params, clippingBox, fThisFrameReactiveFactor, fLuminanceDiff, results);

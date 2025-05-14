@@ -315,6 +315,7 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 	const bool bRequestedAutoExposure = static_cast<bool>(CVarArmASRAutoExposure.GetValueOnRenderThread());
 
 	const EShaderQualityPreset QualityPreset = EShaderQualityPreset(FMath::Clamp(CVarArmASRShaderQuality.GetValueOnRenderThread(), int32(EShaderQualityPreset::QUALITY), int32(EShaderQualityPreset::ULTRA_PERFORMANCE)));
+	const bool bIsQuality = (QualityPreset == EShaderQualityPreset::QUALITY);
 	const bool bIsBalancedOrPerformance = (QualityPreset == EShaderQualityPreset::BALANCED) || (QualityPreset == EShaderQualityPreset::PERFORMANCE);
 	const bool bIsPerformance = (QualityPreset == EShaderQualityPreset::PERFORMANCE);
 	const bool bIsUltraPerformance = (QualityPreset == EShaderQualityPreset::ULTRA_PERFORMANCE);
@@ -383,8 +384,8 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 	{
 		PrevUpscaledColour = GraphBuilder.RegisterExternalTexture(PrevHistory->UpscaledColour, TEXT("PrevUpscaledColour"));
 
-		// Balanced/Performance preset specific
-		if (bIsUltraPerformance || bIsBalancedOrPerformance)
+		// Balanced/Performance/UltraPerformance preset specific
+		if (!bIsQuality)
 		{
 			// Internal reactive history
 			PrevInternalReactive = GraphBuilder.RegisterExternalTexture(PrevHistory->InternalReactive, TEXT("InternalReactive"));
@@ -749,10 +750,10 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 	// Set up new history
 	TRefCountPtr<FArmASRTemporalAAHistory> NewHistory(new FArmASRTemporalAAHistory());
 
-	if (bIsUltraPerformance || bIsBalancedOrPerformance)
+	if (!bIsQuality)
 	{
 		NewHistory->LumaHistory = nullptr;
-		const int32 TemporalReactiveIdx = (bIsUltraPerformance || bIsBalancedOrPerformance) ? 1 : -1;
+		const int32 TemporalReactiveIdx = (!bIsQuality) ? 1 : -1;
 		FRDGTextureRef TemporalReactiveTexture = AccumulateParameters->RenderTargets[TemporalReactiveIdx].GetTexture();
 		GraphBuilder.QueueTextureExtraction(TemporalReactiveTexture, &NewHistory->InternalReactive);
 	}
