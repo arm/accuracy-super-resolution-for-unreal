@@ -153,7 +153,7 @@ The following plugin-specific console variables can be set:
 | `r.ArmASR.Enable`                                  | 1             | 0, 1        | Enable / disable Arm ASR.                                                    |
 | `r.ArmASR.AutoExposure`                            | 0             | 0, 1        | Set to 1 to use Arm ASR’s own auto-exposure, otherwise the engine’s auto-exposure value is used.       |
 | `r.ArmASR.Sharpness`                               | 0             | 0-1         | If greater than 0 this enables Robust Contrast Adaptive Sharpening Filter to sharpen the output image. |
-| `r.ArmASR.ShaderQuality`                           | 1             | 1, 2, 3     | Select shader quality preset: 1 - Quality, 2 - Balanced, 3 - Performance.                              |
+| `r.ArmASR.ShaderQuality`                           | 1             | 1, 2, 3, 4     | Select shader quality preset: 1 - Quality, 2 - Balanced, 3 - Performance, 4 - Ultra Performance.                              |
 | `r.ArmASR.CreateReactiveMask`                      | 1             | 0, 1        | Create the reactive mask.                                                                |
 | `r.ArmASR.ReactiveMaskReflectionScale`             | 0.4           | 0-1         | Scales the Unreal engine reflection contribution to the reactive mask, which can be used to control the amount of aliasing on reflective surfaces. |
 | `r.ArmASR.ReactiveMaskRoughnessScale`              | 0.15          | 0-1         | Scales the GBuffer roughness to provide a fallback value for the reactive mask when screenspace & planar reflections are disabled or don't affect a pixel. |

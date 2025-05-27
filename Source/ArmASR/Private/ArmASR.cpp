@@ -47,7 +47,7 @@ TAutoConsoleVariable<float> CVarArmASRSharpness(
 TAutoConsoleVariable<int32> CVarArmASRShaderQuality(
 	TEXT("r.ArmASR.ShaderQuality"),
 	1,
-	TEXT("Select shader quality preset. 1: Quality / 2: Balanced / 3: Performance"),
+	TEXT("Select shader quality preset. 1: Quality / 2: Balanced / 3: Performance / 4: Ultra Performance"),
 	ECVF_RenderThreadSafe);
 
 TAutoConsoleVariable<int32> CVarArmASRCreateReactiveMask(

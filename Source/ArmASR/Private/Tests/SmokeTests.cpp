@@ -178,12 +178,19 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FArmASRQualityPresetTest,
     ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(1.0f));
     ADD_LATENT_AUTOMATION_COMMAND(FTakeActiveEditorScreenshotCommand(TEXT("ArmASR_ShaderQualityTest_Balanced.png")));
 
-    // 7. Set shader quality to 3.
+    // 9. Set shader quality to 3.
     ADD_LATENT_AUTOMATION_COMMAND(FSetConsoleVariableLatentCommand(TEXT("r.ArmASR.ShaderQuality"), 3));
 
-    // 8. Wait before taking a screenshot.
+    // 10. Wait before taking a screenshot.
     ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(1.0f));
     ADD_LATENT_AUTOMATION_COMMAND(FTakeActiveEditorScreenshotCommand(TEXT("ArmASR_ShaderQualityTest_Performance.png")));
+
+    // 11. Set shader quality to 4.
+    ADD_LATENT_AUTOMATION_COMMAND(FSetConsoleVariableLatentCommand(TEXT("r.ArmASR.ShaderQuality"), 4));
+
+    // 12. Wait before taking a screenshot.
+    ADD_LATENT_AUTOMATION_COMMAND(FWaitLatentCommand(1.0f));
+    ADD_LATENT_AUTOMATION_COMMAND(FTakeActiveEditorScreenshotCommand(TEXT("ArmASR_ShaderQualityTest_UltraPerformance.png")));
 
     return true;
 }

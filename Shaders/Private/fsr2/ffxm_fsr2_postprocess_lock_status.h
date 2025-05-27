@@ -74,7 +74,9 @@ void UpdateLockStatus(AccumulationPassCommonParams params,
 
     FfxFloat32 fPreviousShadingChangeLuma = fLockStatus[LOCK_TEMPORAL_LUMA];
 
-    fLuminanceDiff = 1.0f - MinDividedByMax(fPreviousShadingChangeLuma, fShadingChangeLuma);
+    FfxFloat32 maximum = ffxMax(fPreviousShadingChangeLuma, fShadingChangeLuma);
+    FfxFloat32 minimum = ffxMin(fPreviousShadingChangeLuma, fShadingChangeLuma);
+    fLuminanceDiff = maximum == 0 ? 0.0 : 1.0 - minimum / maximum;
 
     if (state.NewLock) {
         fLockStatus[LOCK_TEMPORAL_LUMA] = fShadingChangeLuma;
