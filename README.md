@@ -25,7 +25,7 @@ SPDX-License-Identifier: MIT -->
 
 Arm ASR uses temporal accumulation to reconstruct high-resolution images while maintaining fine geometric and texture details compared to native rendering. It can enable "practical performance" for costly render operations, such as hardware ray tracing.
 
-This Unreal® Engine plugin provides an implementation of the Arm ASR upscaler to be used with Unreal® projects. It implements the `UE::Renderer::Private::ITemporalUpscaler` interface provided by the engine and it can be integrated effortlessly into your game.
+This Unreal® Engine plugin provides an implementation of the Arm ASR upscaler to be used with Unreal® projects. It implements the `UE::Renderer::Private::ITemporalUpscaler` interface provided by the engine and it can be integrated into your game.
 
 ## Prerequisites
 
