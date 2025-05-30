@@ -819,13 +819,6 @@ void StoreReconstructedDepth(FfxUInt32x2 iPxSample, FfxFloat32 fDepth)
 }
 #endif
 
-#if defined(FSR2_BIND_UAV_RECONSTRUCTED_PREV_NEAREST_DEPTH)
-void SetReconstructedDepth(FfxUInt32x2 iPxSample, const FfxUInt32 uValue)
-{
-    rw_reconstructed_previous_nearest_depth[iPxSample] = uValue;
-}
-#endif
-
 #if defined(FSR2_BIND_SRV_DILATED_MOTION_VECTORS)
 FFXM_MIN16_F2 LoadDilatedMotionVector(FfxUInt32x2 iPxInput)
 {

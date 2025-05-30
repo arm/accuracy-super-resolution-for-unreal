@@ -1,5 +1,5 @@
 // Copyright  © 2023 Advanced Micro Devices, Inc.
-// Copyright © 2024 Arm Limited.
+// Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,19 +22,6 @@
 
 #ifndef FFXM_FSR2_LOCK_H
 #define FFXM_FSR2_LOCK_H
-
-void ClearResourcesForNextFrame(in FfxInt32x2 iPxHrPos)
-{
-    if (all(FFXM_LESS_THAN(iPxHrPos, FfxInt32x2(RenderSize()))))
-    {
-#if FFXM_FSR2_OPTION_INVERTED_DEPTH
-        const FfxUInt32 farZ = 0x0;
-#else
-        const FfxUInt32 farZ = 0x3f800000;
-#endif
-        SetReconstructedDepth(iPxHrPos, farZ);
-    }
-}
 
 FfxBoolean ComputeThinFeatureConfidence(FfxInt32x2 pos)
 {
