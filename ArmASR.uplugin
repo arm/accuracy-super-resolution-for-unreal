@@ -3,22 +3,32 @@
 	"Version": 1,
 	"VersionName": "1.0",
 	"FriendlyName": "ArmASR",
-	"Description": "Arm Accuracy Super Resolution",
+	"Description": "Arm® Accuracy Super Resolution™ is a mobile-optimized temporal upscaling technique derived from AMD's FidelityFX™ Super Resolution 2.",
 	"Category": "Rendering",
-	"CreatedBy": "Arm",
+	"CreatedBy": "Arm Ltd.",
 	"CreatedByURL": "www.arm.com",
-	"DocsURL": "",
+	"DocsURL": "https://developer.arm.com/documentation/109993/0200/?lang=en",
+	"FabURL": "com.epicgames.launcher://ue/Fab/product/9a75a41d-6fad-44c3-995f-646f62cd2512",
 	"MarketplaceURL": "",
 	"SupportURL": "",
+	"EngineVersion": "",
 	"CanContainContent": true,
-	"IsBetaVersion": true,
+	"IsBetaVersion": false,
 	"IsExperimentalVersion": false,
 	"Installed": false,
 	"Modules": [
 		{
 			"Name": "ArmASR",
 			"Type": "Runtime",
-			"LoadingPhase": "PostConfigInit"
+			"LoadingPhase": "PostConfigInit",
+			"PlatformAllowList": [
+                                "Win64",
+				"Mac",
+				"IOS",
+				"Android",
+				"Linux",
+				"LinuxArm64"
+            ]
 		}
 	],
 	"Plugins": [
