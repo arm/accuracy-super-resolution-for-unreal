@@ -607,7 +607,7 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 			RDG_EVENT_NAME("Reconstruct Previous Depth (PS)"),
 			RpdShader,
 			RpdShaderParameters,
-			OutputViewport.Rect);
+			InputViewport.Rect);
 	}
 
 	// Depth Clip Shader
