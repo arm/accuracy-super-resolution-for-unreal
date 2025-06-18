@@ -925,7 +925,7 @@ FfxFloat32 Exposure()
 
     return exposure;
 }
-#elif defined(FFXM_FSR2_OPTION_SHADER_OPT_PERFORMANCE)
+#elif defined(FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE)
 FfxFloat32 Exposure()
 {
     return 1.0;
