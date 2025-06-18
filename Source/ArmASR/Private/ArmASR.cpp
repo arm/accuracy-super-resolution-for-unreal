@@ -169,6 +169,7 @@ public:
 		InternalReactive{ nullptr },
 		LumaHistory{ nullptr },
 		DilatedMotionVectors{ nullptr },
+		DilatedDepthMotionVectorsInputLuma{ nullptr },
 		LockStatus{ nullptr },
 		PreExposure { 0.0 }
 	{};
