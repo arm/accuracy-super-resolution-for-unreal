@@ -29,14 +29,15 @@ void FArmASRGlobalShader::ModifyCompilationEnvironment(const FGlobalShaderPermut
 	bool bIsD3DDXC = (Parameters.Platform == EShaderPlatform::SP_PCD3D_SM5 || Parameters.Platform == EShaderPlatform::SP_PCD3D_SM6) && bUsingDxc;
 	bool bIsHlslcc = FGenericDataDrivenShaderPlatformInfo::GetIsHlslcc(Parameters.Platform);
 	bool bUsingSM6 = IsFeatureLevelSupported(Parameters.Platform, ERHIFeatureLevel::SM6);
+	bool bIsPreviewPlatform = IsSimulatedPlatform(Parameters.Platform);
 
 	if (bIsOpenGL)
 	{
 		OutEnvironment.SetDefine(TEXT("FFXM_SHADER_PLATFORM_GLES_3_2"), 1);
 	}
 
-	// Disable FP16 for OpenGL with HLSLCC or for DX11, as it is not supported.
-	bool bDisableFp16 = (bIsOpenGL && bIsHlslcc) || bIsD3DFXC;
+	// Disable FP16 for OpenGL with HLSLCC or for DX11 or for mobile preview, as it is not always supported.
+	bool bDisableFp16 = (bIsOpenGL && bIsHlslcc) || bIsD3DFXC || bIsPreviewPlatform;
 	OutEnvironment.SetDefine(TEXT("FFXM_HALF"), bDisableFp16 ? 0 : 1);
 
 	if (!bUsingDxc)
