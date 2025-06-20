@@ -276,7 +276,6 @@ public:
 	float PreExposure;
 };
 
-
 static int32_t FRAME_INDEX = 0;
 
 FArmASRTemporalUpscaler::FArmASRTemporalUpscaler(FArmASRInfo& ArmASRInfo, FArmASRPassthroughDenoiser& Denoiser)
@@ -662,7 +661,7 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 			LShaderParameters,
 			ArmASRPassParametersBuffer,
 			LockInputLumaTexture, // Generated RT from Reconstruct Prev Depth
-		    DilatedDepthMotionVectorsInputLumaTexture,
+			DilatedDepthMotionVectorsInputLumaTexture,
 			NewLock,
 			OutputExtents,
 			GraphBuilder
@@ -688,12 +687,12 @@ UE::Renderer::Private::ITemporalUpscaler::FOutputs FArmASRTemporalUpscaler::AddP
 			AccumulateParameters,
 			ArmASRPassParametersBuffer,
 			AutoExposureTexture,							   // Generated from Compute Luminance Pyramid or Unreal Engine
-		    ImgMipShadingChangeTexture,						   // Generated from Compute Luminance Pyramid
-		    DilatedMotionVectorTexture,						   // Dilated Motion vector is generated from Reconstruct Prev Depth
+			ImgMipShadingChangeTexture,						   // Generated from Compute Luminance Pyramid
+			DilatedMotionVectorTexture,						   // Dilated Motion vector is generated from Reconstruct Prev Depth
 			DilatedDepthMotionVectorsInputLumaTexture,
 			DcShaderParameters->RenderTargets[0].GetTexture(), // Dilated Reactive Mask is generated from Depth clip
 			DcShaderParameters->RenderTargets[1].GetTexture(), // Prepared input colour is generated from Depth clip
-		    SceneColorTexture,
+			SceneColorTexture,
 			PrevLockStatus,
 			Outputs.FullRes.Texture,
 			MotionVectorTextureNew,

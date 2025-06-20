@@ -2,6 +2,7 @@
 // Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
+
 #include "ArmASRShaderParameters.h"
 
 class FArmASRLockCS : public FGlobalShader
@@ -17,8 +18,8 @@ public:
 		SHADER_PARAMETER_SAMPLER(SamplerState, s_LinearClamp)
 		SHADER_PARAMETER_SAMPLER(SamplerState, s_PointClamp)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_lock_input_luma)
-	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_depth_motion_vectors_input_luma)
-	    SHADER_PARAMETER_RDG_TEXTURE_UAV(RWTexture2D, rw_new_locks)
+		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_depth_motion_vectors_input_luma)
+		SHADER_PARAMETER_RDG_TEXTURE_UAV(RWTexture2D, rw_new_locks)
 	END_SHADER_PARAMETER_STRUCT()
 
 	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
@@ -51,9 +52,9 @@ inline void SetLockParameters(
 	if (bIsUltraPerformance)
 	{
 		FRDGTextureSRVDesc DilatedDepthMotionVectorsInputLumaSRVDesc =
-		    FRDGTextureSRVDesc::Create(DilatedDepthMotionVectorsInputLumaTexture);
+			FRDGTextureSRVDesc::Create(DilatedDepthMotionVectorsInputLumaTexture);
 		FRDGTextureSRVRef DilatedDepthMotionVectorsInputLumaSRVTexture =
-		    GraphBuilder.CreateSRV(DilatedDepthMotionVectorsInputLumaSRVDesc);
+			GraphBuilder.CreateSRV(DilatedDepthMotionVectorsInputLumaSRVDesc);
 		LShaderParameters->r_dilated_depth_motion_vectors_input_luma = DilatedDepthMotionVectorsInputLumaSRVTexture;
 	}
 	else

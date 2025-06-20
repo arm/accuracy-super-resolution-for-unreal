@@ -2,8 +2,8 @@
 // Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
-#include "ArmASRShaderParameters.h"
 
+#include "ArmASRShaderParameters.h"
 #include "ArmASRShaderUtils.h"
 
 #include "RenderGraphFwd.h"
@@ -37,7 +37,6 @@ public:
 		FArmASRGlobalShader::ModifyCompilationEnvironment(Parameters, OutEnvironment);
 	}
 };
-
 
 // Function to setup Accumulate shader parameters. AccumulateParameters will be updated.
 inline void SetRCASParameters(

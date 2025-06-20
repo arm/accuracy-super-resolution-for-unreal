@@ -2,6 +2,7 @@
 // Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
+
 #include "ArmASRShaderParameters.h"
 
 #include "RenderGraphFwd.h"
@@ -37,7 +38,6 @@ public:
 		FArmASRGlobalShader::ModifyCompilationEnvironment(Parameters, OutEnvironment);
 	}
 };
-
 
 // Function to setup Reconstruct Previous Depth Shader parameters. RpdShaderParameters will be updated.
 inline void SetReconstructPrevDepthParameters(
@@ -88,7 +88,7 @@ inline void SetReconstructPrevDepthParameters(
 
 		FRDGTextureDesc LockLumaDesc = FRDGTextureDesc::Create2D(InputExtents, PF_R16F, FClearValueBinding::Black, TexCreate_ShaderResource | TexCreate_RenderTargetable, 1, 1);
 		FRDGTextureRef LockLumaTexture = GraphBuilder.CreateTexture(LockLumaDesc, TEXT("LockLumaTexture"));
-	
+
 		// Create RenderTargets and assign to parameters.
 		const FScreenPassRenderTarget DilatedDepthRT(DilatedDepthTexture, Viewport.Rect, ERenderTargetLoadAction::ENoAction);
 		RpdShaderParameters->RenderTargets[0] = DilatedDepthRT.GetRenderTargetBinding();

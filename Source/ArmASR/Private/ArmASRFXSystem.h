@@ -3,6 +3,7 @@
 // Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
+
 #pragma once
 
 #include "FXSystem.h"
@@ -54,4 +55,3 @@ public:
 	ArmASRFXSystem(FArmASRInfo& Info, FGPUSortManager* GpuSortManager);
 	~ArmASRFXSystem();
 };
-

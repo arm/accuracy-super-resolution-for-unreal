@@ -2,6 +2,7 @@
 // Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
+
 #include "ArmASRShaderParameters.h"
 
 #include "RenderGraphFwd.h"
@@ -30,9 +31,9 @@ public:
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_motion_vectors)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_color_jittered)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_depth)
-	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_exposure)
-	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_depth_motion_vectors_input_luma)
-	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_prev_dilated_depth_motion_vectors_input_luma)
+		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_exposure)
+		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_depth_motion_vectors_input_luma)
+		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_prev_dilated_depth_motion_vectors_input_luma)
 		RENDER_TARGET_BINDING_SLOTS()
 	END_SHADER_PARAMETER_STRUCT()
 

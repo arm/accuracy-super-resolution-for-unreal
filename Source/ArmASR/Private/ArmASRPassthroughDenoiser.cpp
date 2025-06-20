@@ -5,18 +5,19 @@
 //
 
 #include "ArmASRPassthroughDenoiser.h"
+#include "ArmASRInfo.h"
+
 #include "SceneRendering.h"
 #include "PlanarReflectionSceneProxy.h"
 #include "ScenePrivate.h"
 #include "PostProcess/TemporalAA.h"
-#include "ArmASRInfo.h"
 
 const TCHAR* FArmASRPassthroughDenoiser::GetDebugName() const
 {
 	return TEXT("FArmASRPassthroughDenoiser");
 }
 
-// Note we differ from FSR2 because we do not take over the r.SSR.ExperimentalDenoiser console variable 
+// Note we differ from FSR2 because we do not take over the r.SSR.ExperimentalDenoiser console variable
 // to force this code to be called in order to intercept reflections
 IScreenSpaceDenoiser::FReflectionsOutputs FArmASRPassthroughDenoiser::DenoiseReflections(
 	FRDGBuilder& GraphBuilder,
@@ -49,7 +50,6 @@ void FArmASRPassthroughDenoiser::DenoiseShadowVisibilityMasks(
 	const int32 InputParameterCount,
 	TStaticArray<FShadowVisibilityOutputs, IScreenSpaceDenoiser::kMaxBatchSize>& Outputs) const
 {
-
 	return WrappedDenoiser->DenoiseShadowVisibilityMasks(GraphBuilder, View, PreviousViewInfos, SceneTextures, InputParameters, InputParameterCount, Outputs);
 }
 
@@ -119,6 +119,7 @@ IScreenSpaceDenoiser::FDiffuseIndirectOutputs FArmASRPassthroughDenoiser::Denois
 	return WrappedDenoiser->DenoiseReflectedSkyLight(GraphBuilder, View, PreviousViewInfos, SceneTextures, Inputs, Config);
 }
 #endif
+
 FSSDSignalTextures FArmASRPassthroughDenoiser::DenoiseDiffuseIndirectHarmonic(
 	FRDGBuilder& GraphBuilder,
 	const FViewInfo& View,
@@ -145,4 +146,3 @@ FSSDSignalTextures FArmASRPassthroughDenoiser::DenoiseScreenSpaceDiffuseIndirect
 {
 	return WrappedDenoiser->DenoiseScreenSpaceDiffuseIndirect(GraphBuilder, View, PreviousViewInfos, SceneTextures, Inputs, Config);
 }
-

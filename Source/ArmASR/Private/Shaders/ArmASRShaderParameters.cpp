@@ -2,7 +2,9 @@
 // Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
+
 #include "ArmASRShaderParameters.h"
+
 #include "DataDrivenShaderPlatformInfo.h"
 #include "ShaderCompilerCore.h"
 

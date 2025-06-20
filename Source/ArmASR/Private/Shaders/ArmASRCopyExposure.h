@@ -2,6 +2,7 @@
 // Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
+
 #include "GlobalShader.h"
 #include "RenderGraphFwd.h"
 #include "ShaderCompilerCore.h"

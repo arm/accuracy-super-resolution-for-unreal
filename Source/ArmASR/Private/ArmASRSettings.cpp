@@ -39,6 +39,7 @@ float UArmASRSettings::GetClampedFloatPropertyValue(FFloatProperty *FloatProp, f
 		float min = FloatProp->GetFloatMetaData("ClampMin");
 		ClampedCVarValue = FMath::Max(ClampedCVarValue, min);
 	}
+
 	if (FloatProp->HasMetaData("ClampMax"))
 	{
 		float max = FloatProp->GetFloatMetaData("ClampMax");
@@ -57,6 +58,7 @@ int32 UArmASRSettings::GetClampedEnumPropertyValue(FEnumProperty *EnumProp, int3
 		int32 min = EnumProp->GetIntMetaData("ClampMin");
 		ClampedCVarValue = FMath::Max(ClampedCVarValue, min);
 	}
+
 	if (EnumProp->HasMetaData("ClampMax"))
 	{
 		float max = EnumProp->GetIntMetaData("ClampMax");

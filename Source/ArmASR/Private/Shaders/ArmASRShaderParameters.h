@@ -20,6 +20,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+
 #pragma once
 
 #include "GlobalShader.h"
@@ -60,13 +61,13 @@ END_UNIFORM_BUFFER_STRUCT()
 
 // Parameters for the compute luminance pyramid shader.
 BEGIN_UNIFORM_BUFFER_STRUCT(FArmASRComputeLuminanceParameters, )
-SHADER_PARAMETER(uint32, mips)
-SHADER_PARAMETER(uint32, numWorkGroups)
-SHADER_PARAMETER(FUintVector2, workGroupOffset)
-SHADER_PARAMETER(FUintVector2, renderSize)
+	SHADER_PARAMETER(uint32, mips)
+	SHADER_PARAMETER(uint32, numWorkGroups)
+	SHADER_PARAMETER(FUintVector2, workGroupOffset)
+	SHADER_PARAMETER(FUintVector2, renderSize)
 END_UNIFORM_BUFFER_STRUCT()
 
 // Parameters for the RCAS shader.
 BEGIN_UNIFORM_BUFFER_STRUCT(FArmASRRCASParameters, )
-SHADER_PARAMETER(FUintVector4, rcasConfig)
+	SHADER_PARAMETER(FUintVector4, rcasConfig)
 END_UNIFORM_BUFFER_STRUCT()

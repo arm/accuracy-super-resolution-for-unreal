@@ -3,6 +3,7 @@
 // Copyright © 2024-2025 Arm Limited.
 // SPDX-License-Identifier: MIT
 //
+
 #pragma once
 
 #include "Runtime/Launch/Resources/Version.h"
@@ -99,6 +100,7 @@ public:
 		const FDiffuseIndirectInputs& Inputs,
 		const FAmbientOcclusionRayTracingConfig Config) const override;
 #endif
+
 	/** Entry point to denoise spherical harmonic for diffuse indirect. */
 	FSSDSignalTextures DenoiseDiffuseIndirectHarmonic(
 		FRDGBuilder& GraphBuilder,

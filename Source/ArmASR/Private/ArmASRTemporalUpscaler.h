@@ -4,6 +4,7 @@
 //
 
 #pragma once
+
 #include "ArmASR.h"
 
 #include "Shaders/ArmASRComputeLuminancePyramid.h"

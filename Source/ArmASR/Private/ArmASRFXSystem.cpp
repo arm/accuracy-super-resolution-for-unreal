@@ -31,7 +31,6 @@ void ArmASRFXSystem::UpdateVectorField(UVectorFieldComponent* VectorFieldCompone
 void ArmASRFXSystem::PreInitViews(FRDGBuilder&, bool, const TArrayView<const FSceneViewFamily*>&, const FSceneViewFamily*) {};
 void ArmASRFXSystem::PostInitViews(FRDGBuilder&, TConstStridedView<FSceneView>, bool) {};
 
-
 bool ArmASRFXSystem::UsesGlobalDistanceField() const { return false; }
 
 bool ArmASRFXSystem::UsesDepthBuffer() const { return false; }
@@ -83,7 +82,7 @@ ArmASRFXSystem::ArmASRFXSystem(FArmASRInfo& Info, FGPUSortManager* GpuSortManage
 	: Info(Info), GpuSortManager(GpuSortManager)
 {
 }
-ArmASRFXSystem::~ArmASRFXSystem() {
-}
+
+ArmASRFXSystem::~ArmASRFXSystem() {}
 
 FName const ArmASRFXSystem::FXName(TEXT("ArmASRFXSystem"));

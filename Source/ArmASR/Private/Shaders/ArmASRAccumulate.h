@@ -18,10 +18,11 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
+
 #include "ArmASRShaderParameters.h"
 #include "ArmASRShaderUtils.h"
-
 #include "ArmASRInfo.h"
+
 #include "RenderGraphFwd.h"
 #include "ShaderCompilerCore.h"
 #include "ShaderParameterStruct.h"
@@ -43,11 +44,11 @@ public:
 		SHADER_PARAMETER_SAMPLER(SamplerState, s_PointClamp)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_exposure)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_reactive_masks)
-	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_motion_vectors)
-	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_depth_motion_vectors_input_luma)
-	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_motion_vectors)
-	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_internal_upscaled_color)
-	    SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_color_jittered)
+		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_motion_vectors)
+		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_dilated_depth_motion_vectors_input_luma)
+		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_motion_vectors)
+		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_internal_upscaled_color)
+		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_input_color_jittered)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_lock_status)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_prepared_input_color)
 		SHADER_PARAMETER_RDG_TEXTURE_SRV(Texture2D, r_imgMips)
