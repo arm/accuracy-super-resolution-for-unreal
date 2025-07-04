@@ -46,8 +46,7 @@ public class ArmASR : ModuleRules
 				"Renderer",
 				"RenderCore",
 				"Projects",
-				"RHI",
-				"VulkanRHI"
+				"RHI"
 				// ... add private dependencies that you statically link with here ...
 			}
 		);
@@ -63,6 +62,7 @@ public class ArmASR : ModuleRules
 			|| Target.IsInPlatformGroup(UnrealPlatformGroup.Android))
 		{
 			AddEngineThirdPartyPrivateStaticDependencies(Target, "Vulkan");
+			AddEngineThirdPartyPrivateStaticDependencies(Target, "VulkanRHI");
 		}
 	}
 }

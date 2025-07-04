@@ -10,7 +10,11 @@
 #include "ArmASRPassthroughDenoiser.h"
 #include "ArmASRSettings.h"
 
+#if PLATFORM_IOS || PLATFORM_MAC
+#define ARM_ASR_ENABLE_VK 0
+#else
 #define ARM_ASR_ENABLE_VK 1
+#endif
 
 #if ARM_ASR_ENABLE_VK
 #include "IVulkanDynamicRHI.h"
@@ -148,16 +152,16 @@ TAutoConsoleVariable<int32> CVarArmASRReactiveMaskReactiveShadingModelID(
 	ECVF_RenderThreadSafe
 );
 
-IMPLEMENT_GLOBAL_SHADER(FArmASRAccumulatePS, "/Plugin/ArmASR/Private/AccumulatePass.usf", "main", SF_Pixel);
+IMPLEMENT_GLOBAL_SHADER(FArmASRAccumulatePS, "/Plugin/ArmASR/Private/AccumulatePass.usf", "MainPS", SF_Pixel);
 IMPLEMENT_GLOBAL_SHADER(FArmASRComputeLuminancePyramidCS, "/Plugin/ArmASR/Private/ComputeLuminancePyramidPass.usf",
-						"main", SF_Compute);
-IMPLEMENT_GLOBAL_SHADER(FArmASRConvertVelocity, "/Plugin/ArmASR/Private/ConvertVelocity.usf", "main", SF_Pixel);
+						"MainCS", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FArmASRConvertVelocity, "/Plugin/ArmASR/Private/ConvertVelocity.usf", "MainPS", SF_Pixel);
 IMPLEMENT_GLOBAL_SHADER(FArmASRCopyExposureCS, "/Plugin/ArmASR/Private/CopyExposure.usf", "MainCS", SF_Compute);
-IMPLEMENT_GLOBAL_SHADER(FArmASRCreateReactiveMaskPS, "/Plugin/ArmASR/Private/CreateReactiveMask.usf", "main", SF_Pixel);
-IMPLEMENT_GLOBAL_SHADER(FArmASRDepthClipPS, "/Plugin/ArmASR/Private/DepthClipPass.usf", "main", SF_Pixel);
-IMPLEMENT_GLOBAL_SHADER(FArmASRLockCS, "/Plugin/ArmASR/Private/LockPass.usf", "main", SF_Compute);
-IMPLEMENT_GLOBAL_SHADER(FArmASRRCASPS, "/Plugin/ArmASR/Private/RCASPass.usf", "main", SF_Pixel);
-IMPLEMENT_GLOBAL_SHADER(FArmASRReconstructPrevDepthPS, "/Plugin/ArmASR/Private/ReconstructPrevDepthPass.usf", "main",
+IMPLEMENT_GLOBAL_SHADER(FArmASRCreateReactiveMaskPS, "/Plugin/ArmASR/Private/CreateReactiveMask.usf", "MainPS", SF_Pixel);
+IMPLEMENT_GLOBAL_SHADER(FArmASRDepthClipPS, "/Plugin/ArmASR/Private/DepthClipPass.usf", "MainPS", SF_Pixel);
+IMPLEMENT_GLOBAL_SHADER(FArmASRLockCS, "/Plugin/ArmASR/Private/LockPass.usf", "MainCS", SF_Compute);
+IMPLEMENT_GLOBAL_SHADER(FArmASRRCASPS, "/Plugin/ArmASR/Private/RCASPass.usf", "MainPS", SF_Pixel);
+IMPLEMENT_GLOBAL_SHADER(FArmASRReconstructPrevDepthPS, "/Plugin/ArmASR/Private/ReconstructPrevDepthPass.usf", "MainPS",
 						SF_Pixel);
 
 // History written by frame N and read by frame N + 1.
