@@ -59,7 +59,7 @@ struct DepthClipOutputsFS
 #endif
 };
 
-DepthClipOutputsFS main(float4 SvPosition : SV_POSITION)
+DepthClipOutputsFS MainPS(float4 SvPosition : SV_POSITION)
 {
     uint2 uPixelCoord = uint2(SvPosition.xy);
     DepthClipOutputs result = DepthClip(uPixelCoord);

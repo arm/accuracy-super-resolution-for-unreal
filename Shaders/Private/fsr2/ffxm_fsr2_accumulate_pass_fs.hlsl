@@ -95,7 +95,7 @@ struct AccumulateOutputsFS
 #endif
 };
 
-AccumulateOutputsFS main(float4 SvPosition : SV_POSITION)
+AccumulateOutputsFS MainPS(float4 SvPosition : SV_POSITION)
 {
     uint2 uPixelCoord = uint2(SvPosition.xy);
     AccumulateOutputs result = Accumulate(uPixelCoord);

@@ -40,7 +40,7 @@ struct RCASOutputsFS
     FfxFloat32x3 fUpscaledColor    : SV_TARGET0;
 };
 
-RCASOutputsFS main(float4 SvPosition : SV_POSITION)
+RCASOutputsFS MainPS(float4 SvPosition : SV_POSITION)
 {
     uint2 uPixelCoord = uint2(SvPosition.xy);
     RCASOutputs result = RCAS(uPixelCoord);

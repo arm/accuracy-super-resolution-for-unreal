@@ -65,7 +65,7 @@ struct Outputs
     float CompositeMask : SV_TARGET1;
 };
 
-Outputs main(float4 SvPosition : SV_POSITION)
+Outputs MainPS(float4 SvPosition : SV_POSITION)
 {
     uint2 uPixelCoord = uint2(SvPosition.xy);
 
