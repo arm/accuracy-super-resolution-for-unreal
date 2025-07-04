@@ -61,8 +61,8 @@ uint LumenSpecularCurrentFrame;
 
 struct Outputs
 {
-    float ReactiveMask : SV_TARGET0;
-    float CompositeMask : SV_TARGET1;
+    float ReactiveMask : SV_Target0;
+    float CompositeMask : SV_Target1;
 };
 
 Outputs MainPS(float4 SvPosition : SV_POSITION)

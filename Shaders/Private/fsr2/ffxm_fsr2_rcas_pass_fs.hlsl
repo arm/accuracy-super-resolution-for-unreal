@@ -37,7 +37,7 @@ struct VertexOut
 
 struct RCASOutputsFS
 {
-    FfxFloat32x3 fUpscaledColor    : SV_TARGET0;
+    FfxFloat32x3 fUpscaledColor    : SV_Target0;
 };
 
 RCASOutputsFS MainPS(float4 SvPosition : SV_POSITION)

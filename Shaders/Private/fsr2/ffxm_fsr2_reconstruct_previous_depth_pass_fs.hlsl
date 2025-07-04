@@ -46,11 +46,11 @@ struct VertexOut
 struct ReconstructPrevDepthOutputsFS
 {
 #if FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
-    FfxFloat32x4 fDepthMotionVectorLuma: SV_TARGET0;
+    FfxFloat32x4 fDepthMotionVectorLuma: SV_Target0;
 #else
-    FfxFloat32 fDepth           : SV_TARGET0;
-    FfxFloat32x2 fMotionVector  : SV_TARGET1;
-    FfxFloat32 fLuma            : SV_TARGET2;
+    FfxFloat32 fDepth           : SV_Target0;
+    FfxFloat32x2 fMotionVector  : SV_Target1;
+    FfxFloat32 fLuma            : SV_Target2;
 #endif
 };
 

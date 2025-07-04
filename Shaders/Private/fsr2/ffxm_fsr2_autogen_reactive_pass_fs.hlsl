@@ -31,7 +31,7 @@
 
 struct GenReactiveMaskOutputs
 {
-    FfxFloat32 fReactiveMask : SV_TARGET0;
+    FfxFloat32 fReactiveMask : SV_Target0;
 };
 
 struct VertexOut
