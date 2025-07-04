@@ -10,7 +10,11 @@
 #include "ArmASRPassthroughDenoiser.h"
 #include "ArmASRSettings.h"
 
+#if PLATFORM_IOS || PLATFORM_MAC
+#define ARM_ASR_ENABLE_VK 0
+#else
 #define ARM_ASR_ENABLE_VK 1
+#endif
 
 #if ARM_ASR_ENABLE_VK
 #include "IVulkanDynamicRHI.h"
