@@ -186,7 +186,7 @@ public:
 	   return ComputeMemorySize();
 	}
 
-	uint32 AddRef() const final
+	FReturnedRefCountValue AddRef() const final
 	{
 		return FRefCountBase::AddRef();
 	}
