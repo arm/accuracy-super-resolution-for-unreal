@@ -43,7 +43,7 @@ float3 ComputeStaticVelocity(float2 ScreenPos, float DeviceZ)
 Texture2D InputDepth;
 Texture2D InputVelocity;
 
-float2 main(float4 SvPosition : SV_POSITION) : SV_Target0
+float2 MainPS(float4 SvPosition : SV_POSITION) : SV_Target0
 {
     uint2 Pos = uint2(SvPosition.xy);
     float2 Velocity = 0;

@@ -51,7 +51,7 @@
 FFXM_PREFER_WAVE64
 FFXM_FSR2_NUM_THREADS
 FFXM_FSR2_EMBED_ROOTSIG_CONTENT
-void main(uint2 uGroupId : SV_GroupID, uint2 uGroupThreadId : SV_GroupThreadID)
+void MainCS(uint2 uGroupId : SV_GroupID, uint2 uGroupThreadId : SV_GroupThreadID)
 {
     uint2 uDispatchThreadId = uGroupId * uint2(FFXM_FSR2_THREAD_GROUP_WIDTH, FFXM_FSR2_THREAD_GROUP_HEIGHT) + uGroupThreadId;
 

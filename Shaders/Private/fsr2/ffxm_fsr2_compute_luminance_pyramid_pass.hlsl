@@ -50,7 +50,7 @@
 FFXM_PREFER_WAVE64
 FFXM_FSR2_NUM_THREADS
 FFXM_FSR2_EMBED_CB2_ROOTSIG_CONTENT
-void main(uint3 WorkGroupId : SV_GroupID, uint LocalThreadIndex : SV_GroupIndex)
+void MainCS(uint3 WorkGroupId : SV_GroupID, uint LocalThreadIndex : SV_GroupIndex)
 {
     ComputeAutoExposure(WorkGroupId, LocalThreadIndex);
 }

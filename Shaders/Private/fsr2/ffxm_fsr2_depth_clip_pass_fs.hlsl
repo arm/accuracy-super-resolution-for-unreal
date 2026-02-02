@@ -53,13 +53,13 @@ struct VertexOut
 
 struct DepthClipOutputsFS
 {
-    FfxFloat32x2 fDilatedReactiveMasks    : SV_TARGET0;
+    FfxFloat32x2 fDilatedReactiveMasks    : SV_Target0;
 #if !FFXM_FSR2_OPTION_SHADER_OPT_ULTRA_PERFORMANCE
-    FfxFloat32x4 fTonemapped              : SV_TARGET1;
+    FfxFloat32x4 fTonemapped              : SV_Target1;
 #endif
 };
 
-DepthClipOutputsFS main(float4 SvPosition : SV_POSITION)
+DepthClipOutputsFS MainPS(float4 SvPosition : SV_POSITION)
 {
     uint2 uPixelCoord = uint2(SvPosition.xy);
     DepthClipOutputs result = DepthClip(uPixelCoord);
