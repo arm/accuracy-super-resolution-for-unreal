@@ -14,6 +14,7 @@ public class ArmASR : ModuleRules
 		PublicIncludePaths.AddRange(
 			new string[] {
 				// ... add public include paths required here ...
+
 			}
 		);
 
@@ -22,7 +23,13 @@ public class ArmASR : ModuleRules
 				// ... add other private include paths required here ...
 				Path.Combine(EngineDirectory,"Source/Runtime/Renderer/Private"),
 				Path.Combine(PluginDirectory,"Shaders/Private/fsr2"),
-			}
+                Path.Combine(GetModuleDirectory("Renderer"), "Private"),
+                Path.Combine(GetModuleDirectory("Renderer"), "Internal"),
+                Path.Combine(GetModuleDirectory("RHICore"), "Private"),
+                Path.Combine(GetModuleDirectory("RHICore"), "Internal"),
+                Path.Combine(GetModuleDirectory("D3D12RHI"), "Private"),
+                Path.Combine(GetModuleDirectory("D3D12RHI"), "Internal"),
+            }
 		);
 
 		PublicDependencyModuleNames.AddRange(

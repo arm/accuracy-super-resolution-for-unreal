@@ -109,7 +109,7 @@ inline void SetComputeLuminancePyramidParameters(
 		TextureBulkData AtomicValueBulkData(&AtomicInitValue, sizeof(AtomicInitValue));
 
 		FRHITextureCreateDesc AtomicDesc = FRHITextureCreateDesc::Create2D(TEXT("GlobalAtomicTexture2D"), Size.X, Size.Y, PF_R32_UINT);
-		AtomicDesc.SetBulkData(&AtomicValueBulkData);
+		AtomicDesc.SetInitActionBulkData(&AtomicValueBulkData);
 		AtomicDesc.SetNumMips(1);
 		AtomicDesc.SetInitialState(ERHIAccess::SRVCompute);
 		AtomicDesc.SetNumSamples(1);
